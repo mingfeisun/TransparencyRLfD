@@ -1,3 +1,10 @@
+# catkin workspace
+.catkin_workspace
+
+# ros build files
+build/
+devel/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
