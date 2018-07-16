@@ -15,6 +15,8 @@ mkdir build & cd build
 cmake ..
 sudo make install -j12 # 12 is the maximum process number supported by cpu
 ```
+*Gazebo 8 - SDFormat 5.0 (SDF protocol <= 1.6)*
+
 * [gazebo_ros_pkgs](https://github.com/ros-simulation/gazebo_ros_pkgs)
 
 ### Other requirements
