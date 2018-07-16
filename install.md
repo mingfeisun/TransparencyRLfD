@@ -10,6 +10,13 @@
 * [gazebo](https://github.com/mingfeisun/gazebo)
 * [gazebo_ros_pkgs](https://github.com/ros-simulation/gazebo_ros_pkgs)
 
+### Other requirements
+Install from apt:
+``` bash
+sudo apt-get install ros-kinetic-pr2-msgs
+sudo apt-get install ros-kinetic-pr2-controllers-msgs
+```
+
 ### Demonstration task
 TBD
 
