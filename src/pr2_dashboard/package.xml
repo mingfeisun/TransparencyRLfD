@@ -1,0 +1,47 @@
+<package>
+  <name>pr2_dashboard</name>
+  <version>1.0.0</version>
+  <description>pr2_dashboard is a GUI for debugging and controlling low-level state of the PR2.  It shows things like battery status and breaker states, as well as integrating tools like rxconsole and robot_monitor.</description>
+  <maintainer email="dash@clearpathrobotics.com">Devon Ash</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/pr2_dashboard</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Josh Faust</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>rxtools</build_depend>
+  <build_depend>robot_monitor</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>roslib</build_depend>
+  <build_depend>std_srvs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>pr2_power_board</build_depend>
+  <build_depend>pr2_msgs</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>rxtools</run_depend>
+  <run_depend>robot_monitor</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>roslib</run_depend>
+  <run_depend>std_srvs</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>pr2_power_board</run_depend>
+  <run_depend>pr2_msgs</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+  <!-- <test_depend>rxtools</test_depend> -->
+  <!-- <test_depend>robot_monitor</test_depend> -->
+  <!-- <test_depend>rospy</test_depend> -->
+  <!-- <test_depend>roslib</test_depend> -->
+  <!-- <test_depend>std_srvs</test_depend> -->
+  <!-- <test_depend>std_msgs</test_depend> -->
+  <!-- <test_depend>pr2_power_board</test_depend> -->
+  <!-- <test_depend>pr2_msgs</test_depend> -->
+
+</package>
