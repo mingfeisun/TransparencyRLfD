@@ -18,11 +18,11 @@
       <gravity>1</gravity>
       <self_collide>0</self_collide>
       <visual name='visual'>
-        <pose frame=''>0 0 0 0 -0 0</pose>
+        <pose frame=''>0 0 0 0 0 0</pose>
         <geometry>
           <cylinder>
-            <radius>0.1</radius>
-            <length>0.01</length>
+            <radius>0.03</radius>
+            <length>0.005</length>
           </cylinder>
         </geometry>
         <material>
@@ -35,8 +35,8 @@
         <pose frame=''>0 0 0 0 0 0</pose>
         <geometry>
           <cylinder>
-            <radius>0.1</radius>
-            <length>0.01</length>
+            <radius>0.03</radius>
+            <length>0.005</length>
           </cylinder>
         </geometry>
         <surface>

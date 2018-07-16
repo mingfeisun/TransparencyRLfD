@@ -1,8 +1,26 @@
 #!/usr/bin/env python
 import tf
+import pandas
+import numpy
 import rospy
 from gazebo_msgs.srv import *
 from geometry_msgs.msg import *
+
+package_folder = "/home/mingfei/Documents/ExpressiveRLfD/src/main/"
+
+def loadPlacementMap():
+    filename = "configs/placement_map.txt"
+    df_map = pandas.read_csv(package_folder+filename, sep=' ', header=None)
+    array_map = df_map.values
+    num_grid = numpy.shape(array_map)[0]
+    return num_grid, array_map
+
+def placeObjects(_x, _y, _z, _type, _xml):
+    item_name = _type
+    orient = Quaternion(*tf.transformations.quaternion_from_euler(0, 0, 0))
+    pose = Pose(Point(x=_x, y=_y, z=_z), orient)
+    delete_model(item_name)
+    s(item_name, _xml, "", pose, "world")
 
 if __name__ == '__main__':
     rospy.init_node("spawn_table_models")
@@ -14,40 +32,35 @@ if __name__ == '__main__':
 
     s = rospy.ServiceProxy("gazebo/spawn_sdf_model", SpawnModel)
 
-    orient = Quaternion(*tf.transformations.quaternion_from_euler(0, 0, 0))
-
-    package_folder = "/home/mingfei/Documents/ExpressiveRLfD/src/main/"
 
     xml_cup = ""
     xml_cubic = ""
+    xml_mat = ""
 
     with open(package_folder + "worlds/cup/model.sdf", "r") as f:
         xml_cup = f.read()
-
     with open(package_folder + "worlds/cubic/model.sdf", "r") as f:
         xml_cubic = f.read()
-
-    cup_name = "cup_0"
-    cubic_name = "cubic_0"
+    with open(package_folder + "worlds/mat/model.sdf", "r") as f:
+        xml_mat = f.read()
 
     # cup size: 0.13 height
     # cubic size: 0.05 * 0.05 * 0.05
     # table size: 0.913 * 0.913 * 0.755 (0.04 thickness)
 
-    pos_cup_x = 0
-    pos_cup_y = 0
-    pos_cup_z = 0.755
+    table_size = 0.913
 
-    pose_cup = Pose(Point(x=pos_cup_x, y=pos_cup_y, z=pos_cup_z), orient)
+    num_grid, array_map = loadPlacementMap()
+    grid_size = table_size/num_grid
 
-    pos_cubic_x = 0.3
-    pos_cubic_y = 0
-    pos_cubic_z = 0.755 + 0.04/2 + 0.05/2
-
-    pose_cubic = Pose(Point(x=pos_cubic_x, y=pos_cubic_y, z=pos_cubic_z), orient)
-
-    delete_model(cup_name)
-    delete_model(cubic_name)
-
-    s(cup_name, xml_cup, "", pose_cup, "world")
-    s(cubic_name, xml_cubic, "", pose_cubic, "world")
+    for i in xrange(num_grid):
+        for j in xrange(num_grid):
+            x = grid_size*i + grid_size/2 - table_size/2
+            y = grid_size*j + grid_size/2 - table_size/2
+            z = 0.80
+            if array_map[i, j] == 1:
+                placeObjects(x, y, z, "cup-%d-%d"%(i, j), xml_cup)
+            if array_map[i, j] == 2:
+                placeObjects(x, y, z, "mat-%d-%d"%(i, j), xml_mat)
+            if array_map[i, j] == 3:
+                placeObjects(x, y, z, 'cubic-%d-%d'%(i, j), xml_cubic)

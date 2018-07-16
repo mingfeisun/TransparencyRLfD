@@ -22,5 +22,7 @@
     <arg name="KINECT2" value="$(arg KINECT2)" />
   </include>
 
+  <node name="spawn_table_models" pkg="main" type="spawn_table_models.py"/>
+
 </launch>
 

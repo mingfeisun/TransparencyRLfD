@@ -123,6 +123,139 @@
       </link>
     </model>
 
+    <model name='RoboCup 14 SPL Field'>
+        <static>1</static>
+        <link name='field'>
+            <pose>0 0 0.001 0 -0 0</pose>
+            <collision name='collision'>
+                <geometry>
+                    <plane>
+                    <normal>0 0 1</normal>
+                    <size>10.4 7.4</size>
+                    </plane>
+                </geometry>
+                <surface>
+                    <friction>
+                    <ode>
+                        <mu>100</mu>
+                        <mu2>50</mu2>
+                    </ode>
+                    </friction>
+                    <bounce/>
+                    <contact>
+                    <ode/>
+                    </contact>
+                </surface>
+                <max_contacts>10</max_contacts>
+            </collision>
+            <visual name='carpet'>
+                <cast_shadows>0</cast_shadows>
+                <geometry>
+                    <plane>
+                    <normal>0 0 1</normal>
+                    <size>10.4 7.4</size>
+                    </plane>
+                </geometry>
+                <material>
+                    <script>
+                    <uri>model://robocup09_spl_field/materials/scripts/</uri>
+                    <uri>model://robocup09_spl_field/materials/textures/</uri>
+                    <name>RoboCup/Carpet</name>
+                    </script>
+                </material>
+            </visual>
+            <visual name='sideline_1'>
+                <pose>0 3 0.011 0 -0 0</pose>
+                <cast_shadows>0</cast_shadows>
+                <geometry>
+                    <plane>
+                    <normal>0 0 1</normal>
+                    <size>9.05 0.05</size>
+                    </plane>
+                </geometry>
+                <material>
+                    <script>
+                    <uri>file://media/materials/scripts/gazebo.material</uri>
+                    <name>Gazebo/White</name>
+                    </script>
+                </material>
+            </visual>
+            <visual name='sideline_2'>
+                <pose>0 -3 0.011 0 -0 0</pose>
+                <cast_shadows>0</cast_shadows>
+                <geometry>
+                    <plane>
+                    <normal>0 0 1</normal>
+                    <size>9.05 0.05</size>
+                    </plane>
+                </geometry>
+                <material>
+                    <script>
+                    <uri>file://media/materials/scripts/gazebo.material</uri>
+                    <name>Gazebo/White</name>
+                    </script>
+                </material>
+            </visual>
+            <visual name='endline_1'>
+                <pose>-4.5 0 0.011 0 -0 0</pose>
+                <cast_shadows>0</cast_shadows>
+                <geometry>
+                    <plane>
+                    <normal>0 0 1</normal>
+                    <size>0.05 6.05</size>
+                    </plane>
+                </geometry>
+                <material>
+                    <script>
+                    <uri>file://media/materials/scripts/gazebo.material</uri>
+                    <name>Gazebo/White</name>
+                    </script>
+                </material>
+            </visual>
+            <visual name='endline_2'>
+                <pose>4.5 0 0.011 0 -0 0</pose>
+                <cast_shadows>0</cast_shadows>
+                <geometry>
+                    <plane>
+                    <normal>0 0 1</normal>
+                    <size>0.05 6.05</size>
+                    </plane>
+                </geometry>
+                <material>
+                    <script>
+                    <uri>file://media/materials/scripts/gazebo.material</uri>
+                    <name>Gazebo/White</name>
+                    </script>
+                </material>
+            </visual>
+            <visual name='halfway_line'>
+                <pose>0 0 0.011 0 -0 0</pose>
+                <cast_shadows>0</cast_shadows>
+                <geometry>
+                    <plane>
+                    <normal>0 0 1</normal>
+                    <size>0.05 6.05</size>
+                    </plane>
+                </geometry>
+                <material>
+                    <script>
+                    <uri>file://media/materials/scripts/gazebo.material</uri>
+                    <name>Gazebo/White</name>
+                    </script>
+                </material>
+            </visual>
+
+            <velocity_decay>
+            <linear>0</linear>
+            <angular>0</angular>
+            </velocity_decay>
+            <self_collide>0</self_collide>
+            <kinematic>0</kinematic>
+            <gravity>1</gravity>
+        </link>
+        <pose>-4 0 0 0 -0 0</pose>
+    </model>
+
     <include><uri>model://sun</uri></include>
     <include><uri>model://ground_plane</uri></include>
   </world>
