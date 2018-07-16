@@ -7,7 +7,14 @@
 * [pr2_common_actions](https://github.com/pr2/pr2_common_actions)
 
 ### Gazebo 
-* [gazebo](https://github.com/mingfeisun/gazebo)
+* [gazebo](https://github.com/mingfeisun/gazebo) 
+**Required to be compiled from source**
+``` bash
+cd gazebo
+mkdir build & cd build
+cmake ..
+sudo make install -j12 # 12 is the maximum process number supported by cpu
+```
 * [gazebo_ros_pkgs](https://github.com/ros-simulation/gazebo_ros_pkgs)
 
 ### Other requirements
@@ -18,7 +25,8 @@ sudo apt-get install ros-kinetic-pr2-controllers-msgs
 ```
 
 ### Demonstration task
-TBD
+* [Grid World](https://github.com/rlcode/reinforcement-learning/tree/master/1-grid-world)
+* [Pinball Domain](http://irl.cs.brown.edu/software.php)
 
 ### Reinforcement learning algorithms
 TBD
