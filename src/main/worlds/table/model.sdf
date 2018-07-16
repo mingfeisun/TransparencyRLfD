@@ -113,7 +113,6 @@
         </geometry>
         <material><script><name>Gazebo/DarkGrey</name></script></material>
       </visual>
-
     </link>
   </model>
 </sdf>

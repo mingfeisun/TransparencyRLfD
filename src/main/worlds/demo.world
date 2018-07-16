@@ -1,0 +1,129 @@
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <world name="demo">
+    <gui> 
+        <camera name="camera">
+            <pose>3.0 0 2 0 0.2618 3.14</pose>
+        </camera>
+    </gui>
+
+    <model name="cafe_table">
+      <static>true</static>
+      <link name="link">
+        <collision name="surface">
+          <pose>0 0 0.755 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.913 0.913 0.04</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <collision name="surface_side1">
+          <pose>0.45 0 0.759 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.02 0.913 0.06</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <collision name="surface_side2">
+          <pose>0 0.45 0.759 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.913 0.02 0.06</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <collision name="surface_side3">
+          <pose>-0.45 0 0.759 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.02 0.913 0.06</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <collision name="surface_side4">
+          <pose>0 -0.45 0.759 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.913 0.02 0.06</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <collision name="column">
+          <pose>0 0 0.37 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.042 0.042 0.74</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <collision name="base">
+          <pose>0 0 0.02 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.56 0.56 0.04</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>model://cafe_table/meshes/cafe_table.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+
+        <visual name="surface_side1_visual">
+          <pose>0.45 0 0.759 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.02 0.913 0.06</size>
+            </box>
+          </geometry>
+          <material><script><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <visual name="surface_side2_visual">
+          <pose>0 0.45 0.759 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.913 0.02 0.06</size>
+            </box>
+          </geometry>
+          <material><script><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <visual name="surface_side3_visual">
+          <pose>-0.45 0 0.759 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.02 0.913 0.06</size>
+            </box>
+          </geometry>
+          <material><script><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+
+        <visual name="surface_side4_visual">
+          <pose>0 -0.45 0.759 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.913 0.02 0.06</size>
+            </box>
+          </geometry>
+          <material><script><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+  </world>
+</sdf>
