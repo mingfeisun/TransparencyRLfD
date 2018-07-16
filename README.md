@@ -16,6 +16,11 @@ Possible influences: how the learning process evolve over time? the state visite
 **Tentative schedule**: 
 
 1. Demonstration (Jun 15th)
+
+![](docs/milestone-1-1.png)
+
+![](docs/milestone-1-2.png)
+
 2. Model-based RL (Jul 1st)
 3. Learning process evaluation (Jul 15th)
 4. Engagement control (Jul 20th)
