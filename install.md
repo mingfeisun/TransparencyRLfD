@@ -24,6 +24,7 @@ Install from apt:
 ``` bash
 sudo apt-get install ros-kinetic-pr2-msgs
 sudo apt-get install ros-kinetic-pr2-controllers-msgs
+sudo apt-get install ros-kinetic-common-msgs 
 ```
 
 ### Demonstration task
