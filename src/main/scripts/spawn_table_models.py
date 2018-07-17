@@ -47,9 +47,10 @@ if __name__ == '__main__':
     # table size: 0.913 * 0.913 * 0.755 (0.04 thickness)
 
     table_size = 0.913
+    margin_distance = 0.05
 
     num_grid, array_map = loadPlacementMap()
-    grid_size = table_size/num_grid
+    grid_size = (table_size - 2*margin_distance)/num_grid
 
     item_name = []
     pos_cup = []
