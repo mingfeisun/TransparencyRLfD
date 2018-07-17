@@ -19,7 +19,6 @@ def placeObjects(_x, _y, _z, _type, _xml):
     item_name = _type
     orient = Quaternion(*tf.transformations.quaternion_from_euler(0, 0, 0))
     pose = Pose(Point(x=_x, y=_y, z=_z), orient)
-    delete_model(item_name)
     s(item_name, _xml, "", pose, "world")
 
 if __name__ == '__main__':
@@ -31,7 +30,6 @@ if __name__ == '__main__':
     delete_model = rospy.ServiceProxy("gazebo/delete_model", DeleteModel)
 
     s = rospy.ServiceProxy("gazebo/spawn_sdf_model", SpawnModel)
-
 
     xml_cup = ""
     xml_cubic = ""
@@ -53,14 +51,36 @@ if __name__ == '__main__':
     num_grid, array_map = loadPlacementMap()
     grid_size = table_size/num_grid
 
+    item_name = []
+    pos_cup = []
+    pos_mat = []
+
+    if rospy.has_param('table_params/item_name'):
+        array_item_name = rospy.get_param('table_params/item_name')
+        rospy.delete_param('table_params')
+        for each in array_item_name:
+            delete_model(each)
+
     for i in xrange(num_grid):
         for j in xrange(num_grid):
             x = grid_size*i + grid_size/2 - table_size/2
             y = grid_size*j + grid_size/2 - table_size/2
             z = 0.80
             if array_map[i, j] == 1:
-                placeObjects(x, y, z, "cup-%d-%d"%(i, j), xml_cup)
+                placeObjects(x, y, z, "cup", xml_cup)
+                item_name.append("cup")
+                pos_cup = [x, y, z]
             if array_map[i, j] == 2:
-                placeObjects(x, y, z, "mat-%d-%d"%(i, j), xml_mat)
+                placeObjects(x, y, z, "mat", xml_mat)
+                item_name.append("mat")
+                pos_mat = [x, y, z]
             if array_map[i, j] == 3:
-                placeObjects(x, y, z, 'cubic-%d-%d'%(i, j), xml_cubic)
+                placeObjects(x, y, z, "cubic-%d-%d"%(i, j), xml_cubic)
+                item_name.append("cubic-%d-%d"%(i, j))
+
+    params = {}
+    params['item_name'] = item_name
+    params['cup_pos'] = pos_cup
+    params['mat_pos'] = pos_mat
+
+    rospy.set_param('table_params', params)
