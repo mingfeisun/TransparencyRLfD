@@ -19,18 +19,21 @@ def do_moveCup(_req):
     action_res = CupMoveResult()
 
     step_size = 50
+    time_factor = 1
     margin_distance = 0.05
 
-    delta_position = [_req.x, _req.y, _req.z]
-
-    if rospy.has_param('table_params/cup_pos'):
+    if rospy.has_param('table_params/cup_pos') and rospy.has_param('table_params/grid_size'):
         pre_position = rospy.get_param('table_params/cup_pos')
+        grid_size = rospy.get_param('table_params/grid_size')
     else:
         action_res.res = False
         server.set_aborted(action_res, 'Cup does not exist')
         return
 
-    rate = rospy.Rate(step_size/2)
+    # rospy.loginfo('x= %f, y= %f'%(_req.x, _req.y))
+    delta_position = [_req.x*grid_size, _req.y*grid_size, _req.z*grid_size]
+
+    rate = rospy.Rate(step_size/time_factor)
 
     delta_x = delta_position[0]/step_size
     delta_y = delta_position[1]/step_size
@@ -45,8 +48,8 @@ def do_moveCup(_req):
     model_info.model_name = 'cup'
     model_info.reference_frame = 'world'
 
+    curr_pos = []
     for i in range(step_size):
-        curr_pos = []
 
         # request canceled
         if server.is_preempt_requested():
@@ -62,20 +65,18 @@ def do_moveCup(_req):
 
         # action invalid
         if this_pose.position.x + delta_x >= table_size/2 - margin_distance or this_pose.position.x + delta_x <= -table_size/2 + margin_distance:
-            action_res.res = False
-            server.set_aborted(action_res, 'Action out of bound')
-            return
-
+            curr_pos = [this_pose.position.x, this_pose.position.y, this_pose.position.z]
+            break
         # action invalid
         if this_pose.position.y + delta_y >= table_size/2 - margin_distance or this_pose.position.y + delta_y <= -table_size/2 + margin_distance:
-            action_res.res = False
-            server.set_aborted(action_res, 'Action out of bound')
-            return
+            curr_pos = [this_pose.position.x, this_pose.position.y, this_pose.position.z]
+            break
 
         this_pose.position.y = this_pose.position.y + delta_y
         this_pose.position.x = this_pose.position.x + delta_x
         this_pose.position.z = 0.77
 
+        curr_pos = []
         curr_pos.append(this_pose.position.x)
         curr_pos.append(this_pose.position.y)
         curr_pos.append(this_pose.position.z)

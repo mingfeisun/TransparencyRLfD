@@ -82,5 +82,6 @@ if __name__ == '__main__':
     params['item_name'] = item_name
     params['cup_pos'] = pos_cup
     params['mat_pos'] = pos_mat
+    params['grid_size'] = grid_size
 
     rospy.set_param('table_params', params)
