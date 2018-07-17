@@ -21,6 +21,8 @@ Possible influences: how the learning process evolve over time? the state visite
 
 ![](docs/milestone-1-2.png)
 
+[](https://youtu.be/YFM-GmilUnI)
+
 2. Model-based RL (Jul 1st)
 3. Learning process evaluation (Jul 15th)
 4. Engagement control (Jul 20th)
