@@ -30,6 +30,10 @@ Possible influences: how the learning process evolve over time? the state visite
 * [SARSA](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/SARSA)
 <img src="docs/sarsa.bmp" alt="drawing" width="600px"/>
 
+To-do list:
+* State: pose (position & orientation), velocity, physical properties etc. 
+* Reward: -1 for each movment until reach final goal, -? for collision, 0 for reach final goal, object pose
+
 3. Learning process evaluation (Jul 15th)
 4. Engagement control (Jul 20th)
 5. Motion planning (Jul 25th)
