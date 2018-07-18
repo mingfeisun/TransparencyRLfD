@@ -32,4 +32,4 @@ sudo apt-get install ros-kinetic-common-msgs
 * [Pinball Domain](http://irl.cs.brown.edu/software.php)
 
 ### Reinforcement learning algorithms
-TBD
+* [RLCode Reinforcement Learning](https://github.com/rlcode/reinforcement-learning)
