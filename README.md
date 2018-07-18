@@ -11,7 +11,7 @@ Possible influences: how the learning process evolve over time? the state visite
 
 
 # Overview
-![](docs/framework.png)
+<img src="docs/framework.png" alt="drawing" style="width:200px;"/>
 
 **Tentative schedule**: 
 
