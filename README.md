@@ -11,19 +11,25 @@ Possible influences: how the learning process evolve over time? the state visite
 
 
 # Overview
-<img src="docs/framework.png" alt="drawing" style="width:200px;"/>
+<img src="docs/framework.png" alt="drawing" width="600px"/>
 
 **Tentative schedule**: 
 
 1. Demonstration (Jun 15th)
 
-![](docs/milestone-1-1.png)
+<img src="docs/milestone-1-1.png" alt="drawing" width="600px"/>
 
-![](docs/milestone-1-2.png)
+<img src="docs/milestone-1-2.png" alt="drawing" width="600px"/>
 
-![](docs/teleop.gif)
+<img src="docs/teleop.gif" alt="drawing" width="600px"/>
 
 2. Model-based RL (Jul 1st)
+* [Q-Learning](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/RL-Q-Learning/Reinforcement%20Learning(Q-Learning))
+<img src="docs/q-learning.bmp" alt="drawing" width="600px"/>
+
+* [SARSA](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/SARSA)
+<img src="docs/sarsa.bmp" alt="drawing" width="600px"/>
+
 3. Learning process evaluation (Jul 15th)
 4. Engagement control (Jul 20th)
 5. Motion planning (Jul 25th)
