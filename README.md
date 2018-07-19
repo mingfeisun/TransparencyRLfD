@@ -27,8 +27,14 @@ Possible influences: how the learning process evolve over time? the state visite
 * [Q-Learning](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/RL-Q-Learning/Reinforcement%20Learning(Q-Learning))
 <img src="docs/q-learning.bmp" alt="drawing" width="600px"/>
 
+**Autonomous Q-learning** test on the simulation:
+
+<img src="docs/q-learning-autonomou.gif" alt="drawing" width="600px"/>
+
 * [SARSA](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/SARSA)
 <img src="docs/sarsa.bmp" alt="drawing" width="600px"/>
+
+**To be decided**
 
 To-do list:
 * State: pose (position & orientation), velocity, physical properties etc. 
