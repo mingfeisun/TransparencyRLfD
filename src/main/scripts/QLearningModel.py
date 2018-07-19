@@ -42,7 +42,7 @@ class QLearningModel:
         max_value = state_action[0]
         for index, value in enumerate(state_action):
             if value > max_value:
-                max_index_list.clear()
+                max_index_list = []
                 max_value = value
                 max_index_list.append(index)
             elif value == max_value:
