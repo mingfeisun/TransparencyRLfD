@@ -1,9 +1,11 @@
 int8 x
 int8 y
+int8 time_factor
 ---
 bool complete_status
 int8 reward
-uint8[] state
+int8 state_x
+int8 state_y
 float64 distance_to_go
 ---
 float64 distance_moved
