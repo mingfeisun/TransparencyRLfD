@@ -130,6 +130,7 @@ class SimpleKeyTeleop():
         if self._x != 0 or self._y != 0:
             self.goal.x = self._x
             self.goal.y = self._y
+            self.goal.time_factor = 1
             self.client.send_goal(self.goal)
             self.client.wait_for_result()
 

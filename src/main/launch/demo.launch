@@ -22,10 +22,8 @@
     <arg name="KINECT2" value="$(arg KINECT2)" />
   </include>
 
-  <!--
   <node name="spawn_table_models" pkg="main" type="spawn_table_models.py"/>
   <node name="teleop_cup_server" pkg="main" type="teleop_cup_server.py"/>
-  -->
 
 </launch>
 
