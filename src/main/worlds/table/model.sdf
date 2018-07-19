@@ -16,7 +16,7 @@
         <pose>0.45 0 0.759 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.02 0.913 0.06</size>
+            <size>0.02 0.915 0.06</size>
           </box>
         </geometry>
       </collision>
@@ -25,7 +25,7 @@
         <pose>0 0.45 0.759 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.913 0.02 0.06</size>
+            <size>0.915 0.02 0.06</size>
           </box>
         </geometry>
       </collision>
@@ -34,7 +34,7 @@
         <pose>-0.45 0 0.759 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.02 0.913 0.06</size>
+            <size>0.02 0.915 0.06</size>
           </box>
         </geometry>
       </collision>
@@ -43,7 +43,7 @@
         <pose>0 -0.45 0.759 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.913 0.02 0.06</size>
+            <size>0.915 0.02 0.06</size>
           </box>
         </geometry>
       </collision>
