@@ -98,6 +98,7 @@ if __name__ == '__main__':
     params = {}
     params['item_name'] = item_name
     params['cup_pos'] = pos_cup
+    params['cup_pos_init'] = pos_cup
     params['mat_pos'] = pos_mat
     params['grid_size'] = grid_size
     params['margin_size'] = margin_size
