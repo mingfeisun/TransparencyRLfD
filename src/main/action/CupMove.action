@@ -3,6 +3,7 @@ int8 y
 ---
 bool complete_status
 int8 reward
+uint8[] state
 float64 distance_to_go
 ---
 float64 distance_moved

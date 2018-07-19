@@ -130,9 +130,9 @@ class SimpleKeyTeleop():
         if self._x != 0 or self._y != 0:
             self.goal.x = self._x
             self.goal.y = self._y
-
             self.client.send_goal(self.goal)
             self.client.wait_for_result()
+
 
 def main(stdscr):
     rospy.init_node('teleop_cup', anonymous=True)

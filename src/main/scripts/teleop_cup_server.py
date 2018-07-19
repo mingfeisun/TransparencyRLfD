@@ -51,8 +51,6 @@ def checkAction(target_x, target_y):
     return action_result
 
 def do_moveCup(_req):
-    action_res = CupMoveResult()
-
     if rospy.has_param('table_params'):
         pre_index = rospy.get_param('table_params/cup_pos')
         grid_size = rospy.get_param('table_params/grid_size')
@@ -61,9 +59,12 @@ def do_moveCup(_req):
     else:
         action_res.complete_status = False
         action_res.reward = REWARD_NOT_READY
+        action_res.state = []
         action_res.distance_to_go = 0
         server.set_aborted(action_res, 'Table not ready yet')
         return
+
+    action_res = CupMoveResult()
 
     pre_i = pre_index[0]
     pre_j = pre_index[1]
@@ -74,11 +75,13 @@ def do_moveCup(_req):
     target_i = pre_i + move_i
     target_j = pre_j + move_j
 
+
     check_result = checkAction(target_i, target_j)
 
     if check_result == COLLISION or check_result == OUT_OF_TABLE:
         action_res.complete_status = True
         action_res.reward = REWARD_COLLISION
+        action_res.state = [pre_i, pre_j]
         action_res.distance_to_go = 0 # need to define
         rospy.loginfo('Collision detected')
         server.set_aborted(action_res, 'Collision detected')
@@ -118,6 +121,8 @@ def do_moveCup(_req):
         rate.sleep()
 
     action_res.complete_status = True
+    action_res.state = [target_i, target_j]
+
     if check_result == REACH_GOAL:
         action_res.reward = REWARD_GOAL
         action_res.distance_to_go = 0
