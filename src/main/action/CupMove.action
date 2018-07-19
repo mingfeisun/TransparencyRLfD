@@ -1,9 +1,8 @@
-float64 x
-float64 y
-float64 z
+int8 x
+int8 y
 ---
 bool complete_status
 int8 reward
 float64 distance_to_go
 ---
-float64 distance_left
+float64 distance_moved

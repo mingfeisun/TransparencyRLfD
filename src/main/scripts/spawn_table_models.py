@@ -21,6 +21,11 @@ def placeObjects(_x, _y, _z, _type, _xml):
     pose = Pose(Point(x=_x, y=_y, z=_z), orient)
     s(item_name, _xml, "", pose, "world")
 
+def getXYZFromIJ(i, j, _grid_size, _table_size, _margin_size):
+    x = _grid_size*i + _grid_size/2 - (_table_size - 2*_margin_size)/2
+    y = _grid_size*j + _grid_size/2 - (_table_size - 2*_margin_size)/2
+    z = 0.80
+    return x, y, z
 
 if __name__ == '__main__':
     rospy.init_node("spawn_table_models")
@@ -73,19 +78,18 @@ if __name__ == '__main__':
     for i in xrange(num_grid):
         table_config[str(i)] = {}
         for j in xrange(num_grid):
-            x = grid_size*i + grid_size/2 - (table_size - 2*margin_size)/2
-            y = grid_size*j + grid_size/2 - (table_size - 2*margin_size)/2
-            z = 0.80
+            x, y, z = getXYZFromIJ(i, j, grid_size, table_size, margin_size)
+            table_config[str(i)][str(j)] = ""
             if array_map[i, j] == 1:
                 table_config[str(i)][str(j)] = "cup"
                 placeObjects(x, y, z, "cup", xml_cup)
                 item_name.append("cup")
-                pos_cup = [x, y, z]
+                pos_cup = [i, j]
             if array_map[i, j] == 2:
                 table_config[str(i)][str(j)] = "mat"
                 placeObjects(x, y, z, "mat", xml_mat)
                 item_name.append("mat")
-                pos_mat = [x, y, z]
+                pos_mat = [i, j]
             if array_map[i, j] == 3:
                 table_config[str(i)][str(j)] = "cubic"
                 placeObjects(x, y, z, "cubic-%d-%d"%(i, j), xml_cubic)

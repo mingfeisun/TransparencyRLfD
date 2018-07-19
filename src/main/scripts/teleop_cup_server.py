@@ -9,6 +9,8 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from gazebo_msgs.msg import ModelState
 
+from spawn_table_models import getXYZFromIJ
+
 COLLISION    = 0
 OUT_OF_TABLE = 1
 REACH_GOAL   = 2
@@ -25,61 +27,37 @@ def calDistance(_pos1, _pos2):
         sum = sum + (_pos1[i] - _pos2[i]) * (_pos1[i] - _pos2[i])
     return math.sqrt(sum)
 
-def checkAction(_position):
-    cubic_size   = rospy.get_param('table_params/cubic_size')
-    mat_size     = rospy.get_param('table_params/mat_size')
-    cup_size     = rospy.get_param('table_params/cup_size')
-    mat_pos      = rospy.get_param('table_params/mat_pos')
-    margin_size  = rospy.get_param('table_params/margin_size')
-    grid_size    = rospy.get_param('table_params/grid_size')
-    table_size   = rospy.get_param('table_params/table_size')
+def checkAction(target_x, target_y):
+    mat_pos = rospy.get_param('table_params/mat_pos')
     table_config = rospy.get_param('table_params/table_config')
-
-    left_top_corner_x = -table_size/2 + margin_size
-    left_top_corner_y = -table_size/2 + margin_size
-
-    right_bottom_corner_x = table_size/2 - margin_size
-    right_bottom_corner_y = table_size/2 - margin_size
-
-    target_x = _position[0]
-    target_y = _position[1]
 
     action_result = OK_TO_GO
 
-    if target_x <= left_top_corner_x or target_x >= right_bottom_corner_x:
+    if target_x < 0 or target_y < 0:
         action_result = OUT_OF_TABLE
         return action_result
 
-    if target_y <= left_top_corner_y or target_y >= right_bottom_corner_y:
+    if target_x >= 10 or target_y >= 10:
         action_result = OUT_OF_TABLE
         return action_result
 
-    if abs(target_x - mat_pos[0]) < grid_size/4 and abs(target_y - mat_pos[1]) < grid_size/4:
+    if target_x == mat_pos[0] and target_y == mat_pos[1]:
         action_result = REACH_GOAL
         return action_result
 
-    for i in table_config:
-        for j in table_config[i]:
-            if table_config[i][j] != "cubic":
-                continue
-            pos_x = grid_size*int(i) + grid_size/2 - table_size/2
-            pos_y = grid_size*int(j) + grid_size/2 - table_size/2
-            if abs(target_x - pos_x) <= cup_size+cubic_size/2 and abs(target_y - pos_y) <= cup_size+cubic_size/2:
-                action_result = COLLISION
-                return action_result
+    if table_config[str(target_x)][str(target_y)] == "cubic":
+        action_result = COLLISION
 
     return action_result
 
 def do_moveCup(_req):
     action_res = CupMoveResult()
 
-    step_size = 50
-    time_factor = 1
-    granuality = 1
-
     if rospy.has_param('table_params'):
-        pre_position = rospy.get_param('table_params/cup_pos')
+        pre_index = rospy.get_param('table_params/cup_pos')
         grid_size = rospy.get_param('table_params/grid_size')
+        table_size = rospy.get_param('table_params/table_size')
+        margin_size = rospy.get_param('table_params/margin_size')
     else:
         action_res.complete_status = False
         action_res.reward = REWARD_NOT_READY
@@ -87,73 +65,72 @@ def do_moveCup(_req):
         server.set_aborted(action_res, 'Table not ready yet')
         return
 
-    # rospy.loginfo('x= %f, y= %f'%(_req.x, _req.y))
-    delta_position = [_req.x*grid_size*granuality, _req.y*grid_size*granuality, _req.z*grid_size*granuality]
+    pre_i = pre_index[0]
+    pre_j = pre_index[1]
 
-    rate = rospy.Rate(step_size/time_factor)
+    move_i = _req.x
+    move_j = _req.y
 
-    delta_x = delta_position[0]/step_size
-    delta_y = delta_position[1]/step_size
+    target_i = pre_i + move_i
+    target_j = pre_j + move_j
+
+    check_result = checkAction(target_i, target_j)
+
+    if check_result == COLLISION or check_result == OUT_OF_TABLE:
+        action_res.complete_status = True
+        action_res.reward = REWARD_COLLISION
+        action_res.distance_to_go = 0 # need to define
+        rospy.loginfo('Collision detected')
+        server.set_aborted(action_res, 'Collision detected')
+        return
+
+    x, y, z = getXYZFromIJ(pre_i, pre_j, grid_size, table_size, margin_size)
 
     target_pose = Pose()
-
-    target_pose.position.x = pre_position[0]
-    target_pose.position.y = pre_position[1]
-    target_pose.position.z = pre_position[2]
+    target_pose.position.x = x
+    target_pose.position.y = y
+    target_pose.position.z = z
 
     model_info = ModelState()
     model_info.model_name = 'cup'
     model_info.reference_frame = 'world'
 
+    step_size = 50
+    time_factor = 1
+
+    delta_x = move_i * grid_size/step_size
+    delta_y = move_j * grid_size/step_size
+
+    rate = rospy.Rate(step_size/time_factor)
+
+    rospy.loginfo('OK to go')
     for i in range(step_size):
-        next_pos = []
-        next_pos.append(target_pose.position.x + delta_x)
-        next_pos.append(target_pose.position.y + delta_y)
-        next_pos.append(0.79)
+        target_pose.position.x = target_pose.position.x + delta_x
+        target_pose.position.y = target_pose.position.y + delta_y
+        target_pose.position.z = 0.79
 
-        check_result = checkAction(next_pos)
+        model_info.pose = target_pose
+        pub.publish(model_info)
 
-        if check_result == REACH_GOAL:
-            action_res.complete_status = True
-            action_res.reward = REWARD_GOAL
-            action_res.distance_to_go = 0
-            rospy.loginfo('Mission completed')
-            server.set_preempted(action_res, 'Mission completed')
-            rospy.set_param('table_params/cup_pos', [target_pose.position.x, target_pose.position.y, target_pose.position.z])
-            return
-
-        if check_result == COLLISION or check_result == OUT_OF_TABLE:
-            action_res.complete_status = True
-            action_res.reward = REWARD_COLLISION
-            action_res.distance_to_go = 0 # need to define
-            rospy.loginfo('Collision detected')
-            server.set_aborted(action_res, 'Collision detected')
-            rospy.set_param('table_params/cup_pos', [target_pose.position.x, target_pose.position.y, target_pose.position.z])
-            return
-
-        if check_result == OK_TO_GO:
-            rospy.loginfo('OK to go')
-            target_pose.position.x = next_pos[0]
-            target_pose.position.y = next_pos[1]
-            target_pose.position.z = next_pos[2]
-
-            model_info.pose = target_pose
-            pub.publish(model_info)
-
-            action_fb = CupMoveFeedback()
-            action_fb.distance_moved = calDistance(next_pos, pre_position)
-            server.publish_feedback(action_fb)
-
+        action_fb = CupMoveFeedback()
+        action_fb.distance_moved = delta_x*(i+1) + delta_y*(i+1)
+        server.publish_feedback(action_fb)
         rate.sleep()
 
-    # set current position
-    rospy.set_param('table_params/cup_pos', [target_pose.position.x, target_pose.position.y, target_pose.position.z])
-
-    # request finished
     action_res.complete_status = True
-    action_res.reward = REWARD_MOVE
-    action_res.distance_to_go = 0 # need to define
-    server.set_succeeded(action_res, 'Moving one step')
+    if check_result == REACH_GOAL:
+        action_res.reward = REWARD_GOAL
+        action_res.distance_to_go = 0
+        rospy.loginfo('Mission completed')
+        server.set_preempted(action_res, 'Mission completed')
+    if check_result == OK_TO_GO:
+        action_res.reward = REWARD_MOVE
+        action_res.distance_to_go = 0 # need to define
+        rospy.loginfo('Moveing one step')
+        server.set_succeeded(action_res, 'Moving one step')
+
+    rospy.set_param('table_params/cup_pos', [target_i, target_j])
+
 
 rospy.init_node('teleop_cup', anonymous=True)
 pub = rospy.Publisher('/gazebo/set_model_state', ModelState, queue_size=10)
