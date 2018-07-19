@@ -29,7 +29,7 @@ Possible influences: how the learning process evolve over time? the state visite
 
 **Autonomous Q-learning** test on the simulation:
 
-<img src="docs/q-learning-autonomou.gif" alt="drawing" width="600px"/>
+<img src="docs/q-learning-autonomous.gif" alt="drawing" width="600px"/>
 
 * [SARSA](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/SARSA)
 <img src="docs/sarsa.bmp" alt="drawing" width="600px"/>
