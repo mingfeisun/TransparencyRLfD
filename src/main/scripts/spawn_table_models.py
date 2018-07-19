@@ -49,7 +49,7 @@ if __name__ == '__main__':
     # mat size: 0.03 (radius), 0.005 (thickness)
 
     table_size = 0.913
-    cubic_size = 0.05
+    cubic_size = 0.040
     mat_size = 0.03 # radius
     cup_size = 0.035 # radius
 
@@ -71,23 +71,23 @@ if __name__ == '__main__':
     table_config = {}
 
     for i in xrange(num_grid):
-        table_config[i] = {}
+        table_config[str(i)] = {}
         for j in xrange(num_grid):
-            x = grid_size*i + grid_size/2 - table_size/2
-            y = grid_size*j + grid_size/2 - table_size/2
+            x = grid_size*i + grid_size/2 - (table_size - 2*margin_size)/2
+            y = grid_size*j + grid_size/2 - (table_size - 2*margin_size)/2
             z = 0.80
             if array_map[i, j] == 1:
-                table_config[i][j] = "cup"
+                table_config[str(i)][str(j)] = "cup"
                 placeObjects(x, y, z, "cup", xml_cup)
                 item_name.append("cup")
                 pos_cup = [x, y, z]
             if array_map[i, j] == 2:
-                table_config[i][j] = "mat"
+                table_config[str(i)][str(j)] = "mat"
                 placeObjects(x, y, z, "mat", xml_mat)
                 item_name.append("mat")
                 pos_mat = [x, y, z]
             if array_map[i, j] == 3:
-                table_config[i][j] = "cubic"
+                table_config[str(i)][str(j)] = "cubic"
                 placeObjects(x, y, z, "cubic-%d-%d"%(i, j), xml_cubic)
                 item_name.append("cubic-%d-%d"%(i, j))
 
