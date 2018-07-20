@@ -19,7 +19,7 @@ OK_TO_GO     = 3
 
 REWARD_COLLISION = -2
 REWARD_MOVE      = -1
-REWARD_GOAL      =  1
+REWARD_GOAL      = 10
 REWARD_NOT_READY =  0
 
 def calDistance(_pos1, _pos2):

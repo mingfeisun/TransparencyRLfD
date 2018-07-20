@@ -26,7 +26,7 @@ def action2Goal(_action):
     if _action == 3:
         goal.x = 1
         goal.y = 0
-    goal.time_factor = 50
+    goal.time_factor = 100
     return goal
 
 def action2Position(_action, _pos):
@@ -40,12 +40,6 @@ def action2Position(_action, _pos):
     if _action == 3:
         pos[0] = pos[0] + 1
     return pos
-
-def isGoal(pos1, pos2):
-    if pos1[0] == pos2[0] and pos1[1] == pos2[1]:
-        return True
-    else:
-        return False
 
 if __name__ == "__main__":
     rospy.init_node('teleop_cup', anonymous=True)
@@ -75,10 +69,10 @@ if __name__ == "__main__":
         goal_state = position2State(dst_pos)
 
         while curr_state != goal_state:
-            rospy.loginfo('Current state: %d'%(curr_state))
+            # rospy.loginfo('Current state: %d'%(curr_state))
 
             curr_action = learning_model.get_action(curr_state)
-            rospy.loginfo('Current action: %d'%(curr_action))
+            # rospy.loginfo('Current action: %d'%(curr_action))
 
             curr_goal = action2Goal(curr_action)
 
@@ -87,20 +81,22 @@ if __name__ == "__main__":
 
             result = client.get_result()
             reward = result.reward
+            # rospy.loginfo('Reward received: %d'%(reward))
+
             next_pos = []
             next_pos.append(result.state_x)
             next_pos.append(result.state_y)
             next_state = position2State(next_pos)
+            # rospy.loginfo('Next state: %d'%(next_state))
 
             learning_model.learn(curr_state, curr_action, reward, next_state)
-
             curr_state = next_state
 
             count_actions = count_actions + 1
 
         iters.append(i)
         counts.append(count_actions)
-        rospy.loginfo('Reach goal!')
+        rospy.loginfo('Reach goal! Actions taken: %d'%count_actions)
 
     rospy.loginfo(counts)
 

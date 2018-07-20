@@ -7,8 +7,8 @@ class QLearningModel:
     def __init__(self, actions):
         # actions = [0, 1, 2, 3]
         self.actions = actions
-        self.learning_rate = 0.01
-        self.discount_factor = 0.9
+        self.learning_rate = 0.8
+        self.discount_factor = 0.5
         self.epsilon = 0.1
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
@@ -19,6 +19,7 @@ class QLearningModel:
         new_q = reward + self.discount_factor * max(self.q_table[next_state])
         self.q_table[state][action] += self.learning_rate * (new_q - current_q)
 
+    # update q function with demonstration sample <s, a_h, r, s'>
     def learnFromDemo(self, state, action, reward, next_state):
         current_q = self.q_table[state][action]
         # using human demonstration to update q function
