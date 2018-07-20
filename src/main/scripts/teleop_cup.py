@@ -9,6 +9,10 @@ from main.msg import CupMoveAction, CupMoveGoal, CupMoveActionResult, CupMoveAct
 from geometry_msgs.msg import Pose
 from gazebo_msgs.msg import ModelState
 
+from LearningFromDemo import LearningFromDemo
+
+from main.srv import *
+
 # from https://github.com/ros-teleop/teleop_tools/blob/melodic-devel/key_teleop/scripts/key_teleop.py
 class TextWindow():
 
@@ -65,6 +69,13 @@ class SimpleKeyTeleop():
         self.client = actionlib.SimpleActionClient('teleop_cup', CupMoveAction)
         self.client.wait_for_server()
         self.goal = CupMoveGoal()
+
+        # rospy.wait_for_service('update_learning')
+        # self.update_learning = rospy.ServiceProxy('update_learning', LearningDemo)
+
+        # rospy.wait_for_service('reset_demo')
+        # self.reset_demo = rospy.ServiceProxy('reset_demo', LearningDemo)
+
         rospy.loginfo('Connect to teleop_cup server: finished')
 
     movement_bindings = {
@@ -131,8 +142,34 @@ class SimpleKeyTeleop():
             self.goal.x = self._x
             self.goal.y = self._y
             self.goal.time_factor = 1
+
+#             state = self.getState()
+
             self.client.send_goal(self.goal)
             self.client.wait_for_result()
+#             result = self.client.get_result()
+
+#             reward = result.reward
+#             action = self.goalToAction(self.goal)
+#             next_state = self.getState()
+
+#             self.update_learning(state, action, reward, next_state)
+#             rospy.set_param('demo_params/human_goal', [self._x, self._y])
+
+    def goalToAction(self, _goal):
+        if _goal.x == 0 and _goal.y == -1:
+            return 0
+        if _goal.x == -1 and _goal.y == 0:
+            return 1
+        if _goal.x == 0 and _goal.y == 1:
+            return 2
+        if _goal.x == 1 and _goal.y == 0:
+            return 3
+
+    def getState(self):
+        cup_pos = rospy.get_param('table_params/cup_pos')
+        state = cup_pos[0]*10 + cup_pos[1]
+        return state
 
 
 def main(stdscr):

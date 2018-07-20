@@ -19,13 +19,6 @@ class QLearningModel:
         new_q = reward + self.discount_factor * max(self.q_table[next_state])
         self.q_table[state][action] += self.learning_rate * (new_q - current_q)
 
-    # update q function with demonstration sample <s, a_h, r, s'>
-    def learnFromDemo(self, state, action, reward, next_state):
-        current_q = self.q_table[state][action]
-        # using human demonstration to update q function
-        new_q = reward + self.discount_factor * self.q_table[next_state][action]
-        self.q_table[state][action] += self.learning_rate * (new_q - current_q)
-
     # epsilon-greedy policy
     def get_action(self, state):
         if np.random.rand() < self.epsilon:
@@ -36,6 +29,9 @@ class QLearningModel:
             state_action = self.q_table[state]
             action = self.arg_max(state_action)
         return action
+
+    def reset(self):
+        self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
     @staticmethod
     def arg_max(state_action):
