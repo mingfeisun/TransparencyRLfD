@@ -41,6 +41,10 @@ To-do list:
 * Reward: -1 for each movment until reach final goal, -? for collision, 0 for reach final goal, object pose
 
 3. Learning process evaluation (Jul 15th)
+**Q-learning**:
+* Q function update (update for current state and action only)
+* Predicted action vs. human input action
+
 4. Engagement control (Jul 20th)
 5. Motion planning (Jul 25th)
 
