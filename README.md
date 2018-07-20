@@ -29,7 +29,7 @@ Possible influences: how the learning process evolve over time? the state visite
 
 **Autonomous Q-learning** test on the simulation:
 
-<img src="docs/q-learning-autonomou.gif" alt="drawing" width="600px"/>
+<img src="docs/q-learning-autonomous.gif" alt="drawing" width="600px"/>
 
 * [SARSA](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/SARSA)
 <img src="docs/sarsa.bmp" alt="drawing" width="600px"/>
@@ -41,6 +41,11 @@ To-do list:
 * Reward: -1 for each movment until reach final goal, -? for collision, 0 for reach final goal, object pose
 
 3. Learning process evaluation (Jul 15th)
+
+**Q-learning**:
+* Q function update (update for current state and action only)
+* Predicted action vs. human input action
+
 4. Engagement control (Jul 20th)
 5. Motion planning (Jul 25th)
 
