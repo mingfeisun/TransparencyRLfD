@@ -25,6 +25,10 @@
 * How to select a part of mocap data
 * Direct mapping of mocap data
 
+4. Learning process visualization
+* **Uncertainty vis**
+* **Information gain vis**
+
 ### Milestone setup
 
 **Milestone #1**
