@@ -24,6 +24,8 @@ Possible influences: how the learning process evolve over time? the state visite
 <img src="docs/teleop.gif" alt="drawing" width="600px"/>
 
 2. Model-based RL (Jul 1st)
+
+**Single state-action update**
 * [Q-Learning](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/RL-Q-Learning/Reinforcement%20Learning(Q-Learning))
 <img src="docs/q-learning.bmp" alt="drawing" width="600px"/>
 
@@ -34,11 +36,15 @@ Possible influences: how the learning process evolve over time? the state visite
 * [SARSA](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/SARSA)
 <img src="docs/sarsa.bmp" alt="drawing" width="600px"/>
 
+**Multiple state-action update**: update whole trajectory
+* TD(lambda)
+* SARSA(lambda)
+
 **To be decided**
 
 To-do list:
-* State: pose (position & orientation), velocity, physical properties etc. 
-* Reward: -1 for each movment until reach final goal, -? for collision, 0 for reach final goal, object pose
+* ~~State: pose (position & orientation), velocity, physical properties etc. ~~
+* ~~Reward: -1 for each movment until reach final goal, -2 for collision, 10 for reach final goal, object pose~~
 
 3. Learning process evaluation (Jul 15th)
 
