@@ -14,7 +14,7 @@
 
 ### TODO list
 1. Human demonstration learning: algorithms & implementations
-* How to incorporate human movemements into learning process? 
+* How to incorporate human movemements into learning process? **Reward shaping** [Reference](https://ijcai.org/Proceedings/15/Papers/472.pdf)
 * What are the **common methods** for Robot Learning from Demonstration? 
 
 2. Learning process assessment: investigating paper
