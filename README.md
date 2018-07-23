@@ -1,4 +1,4 @@
-# RLfD_robot-motions
+# Expressive RLfD
 Robot motions in Learning from Demonstration
 
 * To find out what kind of robot motions will affect future demonstrations
