@@ -40,11 +40,15 @@ Possible influences: how the learning process evolve over time? the state visite
 * TD(lambda)
 * SARSA(lambda)
 
-**To be decided**
+**To be decided**:
 
 To-do list:
 * ~~State: pose (position & orientation), velocity, physical properties etc.~~
 * ~~Reward: -1 for each movment until reach final goal, -2 for collision, 10 for reach final goal, object pose~~
+
+**Two different algorithms**: to compare these two types of algorithms
+* Inverse Reinforcement Learning
+* Model-free Reinforcement Learning
 
 3. Learning process evaluation (Jul 15th)
 
