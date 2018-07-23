@@ -43,7 +43,7 @@ Possible influences: how the learning process evolve over time? the state visite
 **To be decided**
 
 To-do list:
-* ~~State: pose (position & orientation), velocity, physical properties etc. ~~
+* ~~State: pose (position & orientation), velocity, physical properties etc.~~
 * ~~Reward: -1 for each movment until reach final goal, -2 for collision, 10 for reach final goal, object pose~~
 
 3. Learning process evaluation (Jul 15th)
