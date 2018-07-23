@@ -9,9 +9,13 @@ from main.msg import CupMoveAction, CupMoveGoal, CupMoveActionResult, CupMoveAct
 from geometry_msgs.msg import Pose
 from gazebo_msgs.msg import ModelState
 
+from CupPoseControl import CupPoseControl
 from LearningFromDemo import LearningFromDemo
+from RobotMove import RobotMove
 
 from main.srv import *
+
+REWARD_GOAL = 10
 
 # from https://github.com/ros-teleop/teleop_tools/blob/melodic-devel/key_teleop/scripts/key_teleop.py
 class TextWindow():
@@ -70,11 +74,15 @@ class SimpleKeyTeleop():
         self.client.wait_for_server()
         self.goal = CupMoveGoal()
 
-        # rospy.wait_for_service('update_learning')
-        # self.update_learning = rospy.ServiceProxy('update_learning', LearningDemo)
+        self.lfd = LearningFromDemo()
 
-        # rospy.wait_for_service('reset_demo')
-        # self.reset_demo = rospy.ServiceProxy('reset_demo', LearningDemo)
+        rospy.wait_for_service('update_learning')
+        self.update_learning = rospy.ServiceProxy('update_learning', LearningDemo)
+
+        rospy.wait_for_service('reset_demo')
+        self.reset_demo = rospy.ServiceProxy('reset_demo', LearningDemo)
+
+        self.robot_move = RobotMove()
 
         rospy.loginfo('Connect to teleop_cup server: finished')
 
@@ -87,6 +95,7 @@ class SimpleKeyTeleop():
 
     def run(self):
         rate = rospy.Rate(self._hz)
+
         self._running = True
         rospy.loginfo('Waiting for coming keys')
         while self._running:
@@ -143,18 +152,22 @@ class SimpleKeyTeleop():
             self.goal.y = self._y
             self.goal.time_factor = 1
 
-#             state = self.getState()
+            state = self.getState()
 
             self.client.send_goal(self.goal)
             self.client.wait_for_result()
-#             result = self.client.get_result()
 
-#             reward = result.reward
-#             action = self.goalToAction(self.goal)
-#             next_state = self.getState()
+            result = self.client.get_result()
 
-#             self.update_learning(state, action, reward, next_state)
-#             rospy.set_param('demo_params/human_goal', [self._x, self._y])
+            reward = result.reward
+            action = self.goalToAction(self.goal)
+            next_state = self.getState()
+
+            self.update_learning(state, action, reward, next_state)
+            rospy.set_param('demo_params/human_goal', [self._x, self._y])
+
+            if reward == REWARD_GOAL:
+                self.robot_move.moveCup()
 
     def goalToAction(self, _goal):
         if _goal.x == 0 and _goal.y == -1:
@@ -174,6 +187,10 @@ class SimpleKeyTeleop():
 
 def main(stdscr):
     rospy.init_node('teleop_cup', anonymous=True)
+
+    cup_pose = CupPoseControl()
+    cup_pose.setPoseDefault()
+
     app = SimpleKeyTeleop(TextWindow(stdscr))
     app.run()
 

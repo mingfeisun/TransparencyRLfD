@@ -9,7 +9,7 @@ class QLearningModel:
         self.actions = actions
         self.learning_rate = 0.8
         self.discount_factor = 0.5
-        self.epsilon = 0.1
+        self.epsilon = 0.01
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
     # update q function with sample <s, a, r, s'>
