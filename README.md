@@ -47,7 +47,10 @@ To-do list:
 * ~~Reward: -1 for each movment until reach final goal, -2 for collision, 10 for reach final goal, object pose~~
 
 **Two different algorithms**: to compare these two types of algorithms
-* Inverse Reinforcement Learning
+* Inverse Reinforcement Learning 
+* * Reference: [Showing versus Doing: Teaching by Demonstration](https://papers.nips.cc/paper/6413-showing-versus-doing-teaching-by-demonstration.pdf)
+* * Exp 1: Teaching Goal-based Reward function
+* * Exp 2: Teaching Feature-based Reward function
 * Model-free Reinforcement Learning
 
 3. Learning process evaluation (Jul 15th)
