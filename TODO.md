@@ -29,6 +29,10 @@
 * **Uncertainty vis**
 * **Information gain vis**
 
+### Evaluation of a Reinforcement Learning process
+* Reward accumulated
+* Performance
+
 ### Milestone setup
 
 **Milestone #1**
