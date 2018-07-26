@@ -39,7 +39,7 @@
 ~~Simulation environment ready~~
 
 **Milestone #2**
-Reinforcemenet learning models
+~~Reinforcemenet learning models~~
 
 **Milestone #3**
 Motions for learning status
