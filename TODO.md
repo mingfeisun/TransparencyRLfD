@@ -14,7 +14,7 @@
 
 ### TODO list
 1. Human demonstration learning: algorithms & implementations
-* How to incorporate human movemements into learning process? 
+* How to incorporate human movemements into learning process? **Reward shaping** [Reference](https://ijcai.org/Proceedings/15/Papers/472.pdf), [code](https://github.com/mike-gimelfarb/bayesian_reward_shaping_rl/blob/master/shaping/RewardShape.py)
 * What are the **common methods** for Robot Learning from Demonstration? 
 
 2. Learning process assessment: investigating paper
@@ -28,6 +28,10 @@
 4. Learning process visualization
 * **Uncertainty vis**
 * **Information gain vis**
+
+### Evaluation of a Reinforcement Learning process
+* Reward accumulated
+* Performance
 
 ### Milestone setup
 
