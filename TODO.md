@@ -29,6 +29,10 @@
 * **Uncertainty vis**
 * **Information gain vis**
 
+5. Autonomous mode (comparsion):
+* Engagement behaviors
+* Non-engagement behaviors
+
 ### Evaluation of a Reinforcement Learning process
 * Reward accumulated
 * Performance
