@@ -153,8 +153,8 @@ class SimpleKeyTeleop():
             self.goal.time_factor = 1
 
             state = self.getState()
-
             self.client.send_goal(self.goal)
+
             self.client.wait_for_result()
 
             result = self.client.get_result()
