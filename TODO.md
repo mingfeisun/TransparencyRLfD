@@ -29,6 +29,10 @@
 * **Uncertainty vis**
 * **Information gain vis**
 
+5. Autonomous mode (comparsion):
+* Engagement behaviors
+* Non-engagement behaviors
+
 ### Evaluation of a Reinforcement Learning process
 * Reward accumulated
 * Performance
@@ -39,7 +43,7 @@
 ~~Simulation environment ready~~
 
 **Milestone #2**
-Reinforcemenet learning models
+~~Reinforcemenet learning models~~
 
 **Milestone #3**
 Motions for learning status
