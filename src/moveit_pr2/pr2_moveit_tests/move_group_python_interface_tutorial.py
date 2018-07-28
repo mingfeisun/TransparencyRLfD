@@ -137,7 +137,7 @@ def move_group_python_interface_tutorial():
 
   display_trajectory.trajectory_start = robot.get_current_state()
   display_trajectory.trajectory.append(plan1)
-  display_trajectory_publisher.publish(display_trajectory);
+  display_trajectory_publisher.publish(display_trajectory)
 
   print "============ Waiting while plan1 is visualized (again)..."
   rospy.sleep(5)
