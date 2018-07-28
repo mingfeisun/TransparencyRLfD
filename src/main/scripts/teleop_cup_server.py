@@ -65,6 +65,7 @@ def do_moveCup(_req):
         action_res.state_x = 0
         action_res.state_y = 0
         action_res.distance_to_go = 0
+        action_res.cup_pose = Pose()
         server.set_aborted(action_res, 'Table not ready yet')
         return
 
@@ -85,6 +86,7 @@ def do_moveCup(_req):
         action_res.state_x = pre_i
         action_res.state_y = pre_j
         action_res.distance_to_go = 0 # need to define
+        action_res.cup_pose = Pose()
         rospy.loginfo('Collision detected')
         server.set_aborted(action_res, 'Collision detected')
         return
@@ -110,16 +112,19 @@ def do_moveCup(_req):
         target_pose.position.y = target_pose.position.y + delta_y
         target_pose.position.z = 0.79
 
-        cupPose.setPose(target_pose)
+        cupPoseCtrl.setPose(target_pose)
+        cupPosePub.publish(target_pose)
 
         action_fb = CupMoveFeedback()
-        action_fb.distance_moved = delta_x*(i+1) + delta_y*(i+1)
+        # action_fb.distance_moved = delta_x*(i+1) + delta_y*(i+1)
+        action_fb.cup_pose = target_pose
         server.publish_feedback(action_fb)
         rate.sleep()
 
     action_res.complete_status = True
     action_res.state_x = target_i
     action_res.state_y = target_j
+    action_res.cup_pose = target_pose
 
     if check_result == REACH_GOAL:
         action_res.reward = REWARD_GOAL
@@ -136,7 +141,8 @@ def do_moveCup(_req):
 
 
 rospy.init_node('teleop_cup', anonymous=True)
-cupPose = CupPoseControl()
+cupPosePub = rospy.Publisher('cup_pose_publisher', Pose, queue_size=20, latch=True)
+cupPoseCtrl = CupPoseControl()
 server = actionlib.SimpleActionServer('teleop_cup', CupMoveAction, do_moveCup, False)
 server.start()
 rospy.loginfo('starting service teleop_cup: finished')

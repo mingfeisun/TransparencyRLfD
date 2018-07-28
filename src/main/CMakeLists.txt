@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
   message_generation
   actionlib_msgs
 )
@@ -74,6 +75,7 @@ generate_messages(
   DEPENDENCIES
   actionlib_msgs
   std_msgs
+  geometry_msgs
 )
 
 ################################################
