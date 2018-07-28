@@ -40,7 +40,7 @@
         <visual name="visual">
           <geometry>
             <mesh>
-              <uri>file://GodHand.dae</uri>
+              <uri>model://hand/meshes/hand.dae</uri>
             </mesh>
           </geometry>
         </visual>

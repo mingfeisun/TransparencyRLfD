@@ -114,5 +114,10 @@
         <material><script><name>Gazebo/DarkGrey</name></script></material>
       </visual>
     </link>
+    <link name="world"/>
+    <joint name="fixed" type="fixed">
+      <parent link="world"/>
+      <child link="link"/>
+    </joint>
   </model>
 </sdf>
