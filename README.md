@@ -13,9 +13,9 @@ Possible influences: how the learning process evolve over time? the state visite
 # Overview
 <img src="docs/framework.png" alt="drawing" width="600px"/>
 
-**Tentative schedule**: 
+## Tentative schedule: 
 
-1. Demonstration (Jun 15th)
+### 1. Demonstration (Jun 15th)
 
 <img src="docs/milestone-1-1.png" alt="drawing" width="600px"/>
 
@@ -23,7 +23,7 @@ Possible influences: how the learning process evolve over time? the state visite
 
 <img src="docs/teleop.gif" alt="drawing" width="600px"/>
 
-2. Model-based RL (Jul 1st)
+### 2. Model-based RL (Jul 1st)
 
 **Single state-action update**
 * [Q-Learning](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/RL-Q-Learning/Reinforcement%20Learning(Q-Learning))
@@ -53,16 +53,20 @@ To-do list:
 * * Exp 2: Teaching Feature-based Reward function
 * Model-free Reinforcement Learning
 
-3. Learning process evaluation (Jul 15th)
+### 3. Learning process evaluation (Jul 15th)
 
 **Q-learning**:
 * Q function update (update for current state and action only)
 * Predicted action vs. human input action
 
-4. Engagement control (Jul 20th)
-5. Motion planning (Jul 25th)
+### 4. Engagement control (Jul 20th)
 
-**To-do lists**:
+### 5. Motion planning (Jul 25th)
+* Testing on PR2 robot: robot right arm follows cup movement
+<img src="docs/robot-follow-cup.gif" alt="drawing" width="600px"/>
+
+
+## To-do lists
 
 1. Need to find out the possible robot motions that would affect the human perception
 2. Need to implement the related motions
