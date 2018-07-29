@@ -46,7 +46,10 @@
 ~~Reinforcemenet learning models~~
 
 **Milestone #3**
-Motions for learning status
+Incorporate demonstrations and evaluate learning process
 
 **Milestone #4**
+Motions for learning status
+
+**Milestone #5**
 Field tests & User study
