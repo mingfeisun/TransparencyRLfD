@@ -166,6 +166,8 @@ class SimpleKeyTeleop():
             self.update_learning(state, action, reward, next_state)
             rospy.set_param('demo_params/human_goal', [self._x, self._y])
 
+            self.robot_move.test_moveArmTo(result.cup_pose)
+
             if reward == REWARD_GOAL:
                 self.robot_move.moveCup()
 

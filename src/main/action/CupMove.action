@@ -7,5 +7,6 @@ int8 reward
 int8 state_x
 int8 state_y
 float64 distance_to_go
+geometry_msgs/Pose cup_pose
 ---
-float64 distance_moved
+geometry_msgs/Pose cup_pose

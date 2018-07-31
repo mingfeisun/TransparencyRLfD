@@ -27,7 +27,7 @@ def action2Goal(_action):
     if _action == 3:
         goal.x = 1
         goal.y = 0
-    goal.time_factor = 100
+    goal.time_factor = 5
     return goal
 
 def action2Position(_action, _pos):

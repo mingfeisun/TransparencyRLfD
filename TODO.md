@@ -29,6 +29,10 @@
 * **Uncertainty vis**
 * **Information gain vis**
 
+5. Autonomous mode (comparsion):
+* Engagement behaviors
+* Non-engagement behaviors
+
 ### Evaluation of a Reinforcement Learning process
 * Reward accumulated
 * Performance
@@ -42,7 +46,10 @@
 ~~Reinforcemenet learning models~~
 
 **Milestone #3**
-Motions for learning status
+Incorporate demonstrations and evaluate learning process
 
 **Milestone #4**
+Motions for learning status
+
+**Milestone #5**
 Field tests & User study
