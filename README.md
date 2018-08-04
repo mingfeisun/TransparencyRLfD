@@ -69,10 +69,12 @@ To-do list:
 After catkin_make
 See the commented codes in the ur_gazebo ur10.launch, I comment some codes to about the world.
 Run
+~~~~
   roslaunch ur_gazebo ur10.launch
   roslaunch ur10_moveit_config ur10_moveit_planning_execution.launch sim:=true
   roslaunch ur10_moveit_config moveit_rviz.launch config:=true
   rosrun main ur10_move_test.py
+~~~~
 to see the effects from the original codes.
 
 ## To-do lists
