@@ -103,4 +103,5 @@ def main():
         rospy.signal_shutdown("KeyboardInterrupt")
         raise
 
-if __name__ == '__main__': main()
+if __name__ == '__main__': 
+    main()
