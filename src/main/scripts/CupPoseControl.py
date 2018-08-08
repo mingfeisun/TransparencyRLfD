@@ -4,12 +4,15 @@ import actionlib
 
 from geometry_msgs.msg import Pose
 from gazebo_msgs.msg import ModelState
+from gazebo_msgs.srv import GetModelState
 
 from spawn_table_models import getXYZFromIJ
 
 class CupPoseControl:
     def __init__(self):
         self.pub = rospy.Publisher('/gazebo/set_model_state', ModelState, queue_size=10)
+        
+        self.model_state_client = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
 
     def setPose(self, _pose):
         model_info = ModelState()
@@ -32,3 +35,15 @@ class CupPoseControl:
         target_pose.position.z = z
         self.setPose(target_pose)
 
+    def getPose(self):
+        cup_pose = self.model_state_client('cup', "").pose
+        return cup_pose
+
+
+if __name__ == "__main__":
+    rospy.init_node('test')
+    rate = rospy.Rate(1)
+    test = CupPoseControl()
+    while not rospy.is_shutdown():
+        # print test.getPose()
+        rate.sleep()
