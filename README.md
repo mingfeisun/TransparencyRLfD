@@ -65,9 +65,10 @@ To-do list:
 * Testing on PR2 robot: robot right arm follows cup movement
 <img src="docs/robot-follow-cup.gif" alt="drawing" width="600px"/>
 
-* Found suitable robot ur10: https://github.com/ros-industrial/universal_robot
-After catkin_make
-See the commented codes in the ur_gazebo ur10.launch, I comment some codes to about the world.
+* Found suitable robot [ur10](https://github.com/ros-industrial/universal_robot). 
+
+After catkin_make, see the commented codes in the ur_gazebo ur10.launch, I comment some codes to about the world.
+
 Run
 ~~~~
   roslaunch ur_gazebo ur10.launch
@@ -79,8 +80,11 @@ to see the effects from the original codes.
 
 ## To-do lists
 
-1. Need to find out the possible robot motions that would affect the human perception
+1. ~~Need to find out the possible robot motions that would affect the human perception~~
 2. Need to implement the related motions
+* Gesturing motions: policy-based
+* Pausing motions: state-uncertainty-based
+
 3. Need to determine the learning model and evaluate the model effects towards the learning
 
 # Expected outcome
