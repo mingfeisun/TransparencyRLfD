@@ -11,7 +11,8 @@ from gazebo_msgs.msg import ModelState
 
 from CupPoseControl import CupPoseControl
 from LearningFromDemo import LearningFromDemo
-from RobotMove import RobotMove
+# from RobotMove import RobotMove
+from RobotMoveURRobot import RobotMoveURRobot
 
 from main.srv import *
 
@@ -82,7 +83,12 @@ class SimpleKeyTeleop():
         rospy.wait_for_service('reset_demo')
         self.reset_demo = rospy.ServiceProxy('reset_demo', LearningDemo)
 
-        self.robot_move = RobotMove()
+        # self.robot_move = RobotMove()
+        self.robot_move = RobotMoveURRobot()
+        self.robot_move.initRobotPose()
+        self.robot_move.moveArmToCupTop()
+
+        self.cupCtrl = CupPoseControl()
 
         rospy.loginfo('Connect to teleop_cup server: finished')
 
@@ -166,7 +172,8 @@ class SimpleKeyTeleop():
             self.update_learning(state, action, reward, next_state)
             rospy.set_param('demo_params/human_goal', [self._x, self._y])
 
-            self.robot_move.test_moveArmTo(result.cup_pose)
+            r_x, r_y, r_z = self.robot_move.cupPoseToRobotPose(result.cup_pose)
+            self.robot_move.moveArmTo(r_x, r_y, r_z)
 
             if reward == REWARD_GOAL:
                 self.robot_move.moveCup()
