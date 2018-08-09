@@ -23,7 +23,7 @@ Possible influences: how the learning process evolve over time? the state visite
 
 <img src="docs/teleop.gif" alt="drawing" width="600px"/>
 
-### 2. Model-based RL (Jul 1st)
+### 2. Model-free RL (Jul 1st)
 
 **Single state-action update**
 * [Q-Learning](https://github.com/mingfeisun/matlab-reinforcement-learning/tree/master/RL-Q-Learning/Reinforcement%20Learning(Q-Learning))
@@ -59,24 +59,13 @@ To-do list:
 * Q function update (update for current state and action only)
 * Predicted action vs. human input action
 
-### 4. Engagement control (Jul 20th)
-
-### 5. Motion planning (Jul 25th)
-* Testing on PR2 robot: robot right arm follows cup movement
+### 4. Motion planning (Jul 25th)
+* Testing on PR2 robot: robot right arm follows cup movement: (speed: x10)
 <img src="docs/robot-follow-cup.gif" alt="drawing" width="600px"/>
 
-* Found suitable robot [ur10](https://github.com/ros-industrial/universal_robot). 
+* Testing on [UR10 robot](https://github.com/ros-industrial/universal_robot): (speed: x5)
+<img src="docs/arm-move-cup.gif" alt="drawing" width="600px"/>
 
-After catkin_make, see the commented codes in the ur_gazebo ur10.launch, I comment some codes to about the world.
-
-Run
-~~~~
-  roslaunch ur_gazebo ur10.launch
-  roslaunch ur10_moveit_config ur10_moveit_planning_execution.launch sim:=true
-  roslaunch ur10_moveit_config moveit_rviz.launch config:=true
-  rosrun main ur10_move_test.py
-~~~~
-to see the effects from the original codes.
 
 ## To-do lists
 
