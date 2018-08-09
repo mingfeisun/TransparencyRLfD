@@ -169,8 +169,9 @@ class RobotMoveURRobot:
         self.group_man.clear_pose_targets()
 
     def cb_action_request(self, _feedback):
-        target_pose = _feedback.cup_pose
-        self.moveArmToPose(target_pose)
+        cup_pose = self.cup_pos_ctrl.getPose()
+        target_x, target_y, target_z = self.cupPoseToRobotPose(cup_pose)
+        self.moveArmTo(target_x, target_y, target_z)
 
     def moveCup(self):
         # set cup pose to init position
