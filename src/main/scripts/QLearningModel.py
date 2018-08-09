@@ -7,8 +7,8 @@ class QLearningModel:
     def __init__(self, actions):
         # actions = [0, 1, 2, 3]
         self.actions = actions
-        self.learning_rate = 0.8
-        self.discount_factor = 0.5
+        self.learning_alpha = 0.8
+        self.discount_lambda = 0.5
         self.epsilon = 0.01
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
@@ -16,8 +16,8 @@ class QLearningModel:
     def learn(self, state, action, reward, next_state):
         current_q = self.q_table[state][action]
         # using Bellman Optimality Equation to update q function
-        new_q = reward + self.discount_factor * max(self.q_table[next_state])
-        self.q_table[state][action] += self.learning_rate * (new_q - current_q)
+        new_q = reward + self.discount_lambda * max(self.q_table[next_state])
+        self.q_table[state][action] += self.learning_alpha * (new_q - current_q)
 
     # epsilon-greedy policy
     def get_action(self, state):
@@ -28,6 +28,13 @@ class QLearningModel:
             # take action according to the q function table
             state_action = self.q_table[state]
             action = self.arg_max(state_action)
+        return action
+
+    # max 
+    def get_action_max(self, state):
+        # take action according to the q function table
+        state_action = self.q_table[state]
+        action = self.arg_max(state_action)
         return action
 
     def reset(self):
