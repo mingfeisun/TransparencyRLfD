@@ -65,7 +65,7 @@ def do_moveCup(_req):
         action_res.state_x = 0
         action_res.state_y = 0
         action_res.distance_to_go = 0
-        action_res.cup_pose = Pose()
+        action_res.cup_pose = cupPoseCtrl.getPose()
         server.set_aborted(action_res, 'Table not ready yet')
         return
 
@@ -86,7 +86,7 @@ def do_moveCup(_req):
         action_res.state_x = pre_i
         action_res.state_y = pre_j
         action_res.distance_to_go = 0 # need to define
-        action_res.cup_pose = Pose()
+        action_res.cup_pose = cupPoseCtrl.getPose()
         rospy.loginfo('Collision detected')
         server.set_aborted(action_res, 'Collision detected')
         return

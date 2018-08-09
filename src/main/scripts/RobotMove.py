@@ -81,7 +81,7 @@ class RobotMove:
         pose_goal = _pose_goal
         pose_goal.position.x += 0.45
         # pose_goal.position.y += 0.45
-        pose_goal.position.z = 0.95
+        pose_goal.position.z = 1.05
         self.group_right_arm_torso.set_pose_target(pose_goal)
         self.group_right_arm_torso.go(wait=True)
         # self.group_right_arm.stop()

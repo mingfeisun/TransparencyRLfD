@@ -1,4 +1,5 @@
 # pycharm
+*.vscode/
 src/main/scripts/.idea/
 
 # catkin workspace

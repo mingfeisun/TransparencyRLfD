@@ -1,6 +1,6 @@
 ### Schedule and tasks
 **System implementation**
-* Simulation environment & human demonstrations
+* ~~Simulation environment & human demonstrations~~
 * Learning methods
 * Robot motions
 
@@ -8,7 +8,7 @@
 * Parameters tuning
 
 **Paper writing**
-* Introduction & related work
+* ~~Introduction & related work~~
 * System implementation
 * User study
 
@@ -21,9 +21,9 @@
 * How to assessment a learning process?
 * Common metrics in Robot Learning from Demonstrations
 
-3. Robot motions: mocap data retargetting
-* How to select a part of mocap data
-* Direct mapping of mocap data
+3. ~~Robot motions: mocap data retargetting~~
+* ~~How to select a part of mocap data~~
+* ~~Direct mapping of mocap data~~
 
 4. Learning process visualization
 * **Uncertainty vis**
