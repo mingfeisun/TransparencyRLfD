@@ -68,6 +68,8 @@ class RobotMoveURRobot:
         self.robot_pose.position.y = 0
         self.robot_pose.position.z = 0.8
 
+        self.addCollision()
+
     def initCup(self):
         # set to init position
         self.cup_pos_ctrl.setPoseDefault()
@@ -78,7 +80,7 @@ class RobotMoveURRobot:
 
         # [144.593816163399, 5.754934304529601, 7.194142435155028, 10.61821127013265, 4.675844406769917, 7.934736338099062]
         Q1 = [0.009653124896662924, -0.6835756311532828, 1.0619281313412259, -0.3737989105267019, 0.009994925707914604, -0.001918946439335656]
-        Q2 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, 4.681749171284383, 1.8825401280344316]
+        Q2 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, -1.541749171284383, -1.8825401280344316]
         # Q3 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, 4.681749171284383, 1.8825401280344316]
         # Q2 = [1.5,0,-1.57,0,0,0]
         # Q3 = [1.5,-0.2,-1.57,0,0,0]
@@ -99,6 +101,31 @@ class RobotMoveURRobot:
             self.joint_client.wait_for_result()
         except KeyboardInterrupt:
             self.joint_client.cancel_goal()
+    
+    def addCollision(self):
+        collision_bottom_pose = geometry_msgs.msg.PoseStamped()
+        collision_bottom_pose.header.frame_id = "world"
+        collision_bottom_pose.pose.orientation.w = 1.0
+        collision_bottom_pose.pose.position.x = 0.4
+        collision_bottom_pose.pose.position.z = -0.2
+        collision_bottom_name = "collision_bottom"
+        self.scene.add_box(collision_bottom_name, collision_bottom_pose, size=(2, 2, 0.2))
+
+        collision_back_pose = geometry_msgs.msg.PoseStamped()
+        collision_back_pose.header.frame_id = "world"
+        collision_back_pose.pose.orientation.w = 1.0
+        collision_back_pose.pose.position.x = -0.5
+        collision_back_pose.pose.position.z = 0.4
+        collision_back_name = "collision_back"
+        self.scene.add_box(collision_back_name, collision_back_pose, size=(0.2, 2, 1))
+
+        collision_top_pose = geometry_msgs.msg.PoseStamped()
+        collision_top_pose.header.frame_id = "world"
+        collision_top_pose.pose.orientation.w = 1.0
+        collision_top_pose.pose.position.x = 0.4
+        collision_top_pose.pose.position.z = 1.0
+        collision_top_name = "collision_top"
+        self.scene.add_box(collision_top_name, collision_top_pose, size=(2, 2, 0.2))
 
     def moveArmToCupTop(self):
         cup_pose = self.cup_pos_ctrl.getPose()
@@ -124,6 +151,7 @@ class RobotMoveURRobot:
         pose_goal.position.y = _y
         pose_goal.position.z = _z
 
+        self.group_man.clear_pose_targets()
         self.group_man.set_pose_target(pose_goal)
         self.group_man.go(wait=True)
         self.group_man.stop()
@@ -212,6 +240,7 @@ class RobotMoveURRobot:
         rospy.loginfo("Starting human's turn")
 
         self.cup_pos_ctrl.setPoseDefault()
+        self.moveArmToCupTop()
 
     def cupPoseToRobotPose(self, _cup_pose):
         delta_x = _cup_pose.position.x - self.robot_pose.position.x
