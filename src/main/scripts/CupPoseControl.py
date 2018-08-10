@@ -12,6 +12,7 @@ class CupPoseControl:
     def __init__(self):
         self.pub = rospy.Publisher('/gazebo/set_model_state', ModelState, queue_size=10)
         
+        rospy.wait_for_service('/gazebo/get_model_state')
         self.model_state_client = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
 
     def setPose(self, _pose):

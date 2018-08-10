@@ -83,13 +83,6 @@ class SimpleKeyTeleop():
         rospy.wait_for_service('reset_demo')
         self.reset_demo = rospy.ServiceProxy('reset_demo', LearningDemo)
 
-        # self.robot_move = RobotMove()
-        self.robot_move = RobotMoveURRobot()
-        self.robot_move.initRobotPose()
-        self.robot_move.moveArmToCupTop()
-
-        self.cupCtrl = CupPoseControl()
-
         rospy.loginfo('Connect to teleop_cup server: finished')
 
     movement_bindings = {
@@ -101,6 +94,14 @@ class SimpleKeyTeleop():
 
     def run(self):
         rate = rospy.Rate(self._hz)
+
+        self.cupCtrl = CupPoseControl()
+        rospy.sleep(0.5)
+        self.cupCtrl.setPoseDefault()
+
+        self.robot_move = RobotMoveURRobot()
+        self.robot_move.initRobotPose()
+        self.robot_move.moveArmToCupTop()
 
         self._running = True
         rospy.loginfo('Waiting for coming keys')
@@ -195,15 +196,11 @@ class SimpleKeyTeleop():
 
 
 def main(stdscr):
-    rospy.init_node('teleop_cup', anonymous=True)
-
-    cup_pose = CupPoseControl()
-    cup_pose.setPoseDefault()
-
     app = SimpleKeyTeleop(TextWindow(stdscr))
     app.run()
 
 if __name__ == "__main__":
+    rospy.init_node('teleop_cup', anonymous=True)
     try:
         curses.wrapper(main)
     except rospy.ROSInterruptException:

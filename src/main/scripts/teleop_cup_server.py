@@ -51,7 +51,7 @@ def checkAction(target_x, target_y):
 
     return action_result
 
-def do_moveCup(_req):
+def cb_moveCup(_req):
     action_res = CupMoveResult()
 
     if rospy.has_param('table_params'):
@@ -113,7 +113,6 @@ def do_moveCup(_req):
         target_pose.position.z = 0.79
 
         cupPoseCtrl.setPose(target_pose)
-        cupPosePub.publish(target_pose)
 
         action_fb = CupMoveFeedback()
         # action_fb.distance_moved = delta_x*(i+1) + delta_y*(i+1)
@@ -140,10 +139,9 @@ def do_moveCup(_req):
     rospy.set_param('table_params/cup_pos', [target_i, target_j])
 
 
-rospy.init_node('teleop_cup', anonymous=True)
-cupPosePub = rospy.Publisher('cup_pose_publisher', Pose, queue_size=20, latch=True)
+rospy.init_node('teleop_cup_sever', anonymous=True)
 cupPoseCtrl = CupPoseControl()
-server = actionlib.SimpleActionServer('teleop_cup', CupMoveAction, do_moveCup, False)
+server = actionlib.SimpleActionServer('teleop_cup', CupMoveAction, cb_moveCup, False)
 server.start()
 rospy.loginfo('starting service teleop_cup: finished')
 rospy.spin()

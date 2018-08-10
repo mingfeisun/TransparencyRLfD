@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 import random
 from collections import defaultdict
 
@@ -9,7 +9,7 @@ class QLearningModel:
         self.actions = actions
         self.learning_alpha = 0.8
         self.discount_lambda = 0.5
-        self.epsilon = 0.01
+        self.epsilon = 0.5
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
     # update q function with sample <s, a, r, s'>
@@ -21,9 +21,9 @@ class QLearningModel:
 
     # epsilon-greedy policy
     def get_action(self, state):
-        if np.random.rand() < self.epsilon:
+        if numpy.random.rand() < self.epsilon:
             # take random action
-            action = np.random.choice(self.actions)
+            action = numpy.random.choice(self.actions)
         else:
             # take action according to the q function table
             state_action = self.q_table[state]

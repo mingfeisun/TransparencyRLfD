@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import math
+import numpy
 from main.srv import *
 
 from QLearningModel import QLearningModel
@@ -11,9 +12,10 @@ class LearningFromDemo:
     def __init__(self):
         # four actions: 0(left), 1(up), 2(right), 3(down)
         self.model = QLearningModel([0, 1, 2, 3])
-        s1 = rospy.Service('update_learning', LearningDemo, self.cb_learning)
-        s2 = rospy.Service('query_action', QueryAction, self.cb_queryAction)
-        s3 = rospy.Service('reset_demo', ResetDemoLearning, self.cb_reset)
+        rospy.Service('update_learning', LearningDemo, self.cb_learning)
+        rospy.Service('query_action', QueryAction, self.cb_queryAction)
+        # rospy.Service('query_action', QueryAction, self.cb_queryAction_potential)
+        rospy.Service('reset_demo', ResetDemoLearning, self.cb_reset)
 
         self.potential = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
@@ -27,10 +29,17 @@ class LearningFromDemo:
 
     def compute_potential(self, _s, _s_demo):
         diff = self.state_distance(_s, _s_demo)
-        return math.exp(-0.5 * diff * diff)
+
+        # for testing
+        # if diff == 0: 
+        #     return 1.0
+        # else:
+        #     return 0.0
+
+        return math.exp(-2 * diff * diff)
 
     def update_potential(self, _s_demo, _a_demo):
-        for each_s in self.potential:
+        for each_s in range(99):
             pot = self.compute_potential(each_s, _s_demo)
             self.potential[each_s][_a_demo] += pot
 
@@ -48,6 +57,11 @@ class LearningFromDemo:
 
         self.model.learn(s_demo, a_demo, new_reward, ns_demo)
         return LearningDemoResponse(True)
+
+    def cb_queryAction_potential(self, _req):
+        state_action = self.potential[_req.state]
+        action = QLearningModel.arg_max(state_action)
+        return action
 
     def cb_queryAction(self, _req):
         action = self.model.get_action(_req.state)
