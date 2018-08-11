@@ -96,7 +96,7 @@ class SimpleKeyTeleop():
         rate = rospy.Rate(self._hz)
 
         self.cupCtrl = CupPoseControl()
-        rospy.sleep(0.5)
+        rospy.sleep(1)
         self.cupCtrl.setPoseDefault()
 
         self.robot_move = RobotMoveURRobot()

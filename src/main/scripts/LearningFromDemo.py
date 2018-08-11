@@ -13,8 +13,8 @@ class LearningFromDemo:
         # four actions: 0(left), 1(up), 2(right), 3(down)
         self.model = QLearningModel([0, 1, 2, 3])
         rospy.Service('update_learning', LearningDemo, self.cb_learning)
-        rospy.Service('query_action', QueryAction, self.cb_queryAction)
-        # rospy.Service('query_action', QueryAction, self.cb_queryAction_potential)
+        # rospy.Service('query_action', QueryAction, self.cb_queryAction)
+        rospy.Service('query_action', QueryAction, self.cb_queryAction_potential)
         rospy.Service('reset_demo', ResetDemoLearning, self.cb_reset)
 
         self.potential = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
@@ -29,14 +29,7 @@ class LearningFromDemo:
 
     def compute_potential(self, _s, _s_demo):
         diff = self.state_distance(_s, _s_demo)
-
-        # for testing
-        # if diff == 0: 
-        #     return 1.0
-        # else:
-        #     return 0.0
-
-        return math.exp(-2 * diff * diff)
+        return -math.exp(-2 * diff * diff)
 
     def update_potential(self, _s_demo, _a_demo):
         for each_s in range(99):
@@ -50,6 +43,7 @@ class LearningFromDemo:
         ns_demo = _req.next_state
 
         self.update_potential(s_demo, a_demo)
+        self.print_potential()
 
         na_demo = self.model.get_action_max(ns_demo)
         f_value = self.model.discount_lambda * self.potential[ns_demo][na_demo] - self.potential[s_demo][a_demo]
@@ -70,3 +64,11 @@ class LearningFromDemo:
     def cb_reset(self, _req):
         self.model.reset()
         return ResetDemoLearningResponse(True)
+
+    def print_potential(self):
+        with open('q_potential_value.txt', 'w') as fout:
+            fout.write("State \t Left \t Up \t Right \t Down \n")
+            for i in range(99):
+                each = i
+                fout.write("%02d \t %.2f \t %.2f \t %.2f \t %.2f \n"
+                    %(each, self.potential[each][0],self.potential[each][1], self.potential[each][2],self.potential[each][3]))

@@ -58,10 +58,10 @@ class RobotMoveURRobot:
         self.joint_client = actionlib.SimpleActionClient('arm_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
         self.joint_client.wait_for_server()
 
-        self.orien_x =  0.500274157622
-        self.orien_y =  0.501706342807
-        self.orien_z = -0.499590134138
-        self.orien_w =  0.498423726035
+        self.orien_x = 0.00709209889026
+        self.orien_y = 0.731524912106
+        self.orien_z = 0.0131916335966
+        self.orien_w = 0.681650193211
 
         self.robot_pose = Pose()
         self.robot_pose.position.x = -0.65
@@ -79,8 +79,8 @@ class RobotMoveURRobot:
             'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint']
 
         # [144.593816163399, 5.754934304529601, 7.194142435155028, 10.61821127013265, 4.675844406769917, 7.934736338099062]
-        Q1 = [0.009653124896662924, -0.6835756311532828, 1.0619281313412259, -0.3737989105267019, 0.009994925707914604, -0.001918946439335656]
-        Q2 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, -1.541749171284383, -1.8825401280344316]
+        Q1 = [0.009653124896662924, -0.6835756311532828, 1.0619281313412259, -0.3737989105267019, 0.009994925707914604, 0]
+        Q2 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, -1.541749171284383, 0]
         # Q3 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, 4.681749171284383, 1.8825401280344316]
         # Q2 = [1.5,0,-1.57,0,0,0]
         # Q3 = [1.5,-0.2,-1.57,0,0,0]
@@ -218,12 +218,18 @@ class RobotMoveURRobot:
         curr_state = position2State(beg_pos)
         goal_state = position2State(dst_pos)
 
+        max_action_num = 100
+
+        action_num = 0
+
         while curr_state != goal_state:
             curr_action = self.query_action(curr_state).action
             curr_goal = action2Goal(curr_action)
 
             self.client.send_goal(curr_goal, feedback_cb=self.cb_action_request)
             self.client.wait_for_result()
+
+            action_num = action_num + 1
 
             result = self.client.get_result()
             reward = result.reward
@@ -235,6 +241,9 @@ class RobotMoveURRobot:
 
             self.update_learning(curr_state, curr_action, reward, next_state)
             curr_state = next_state
+
+            if action_num > max_action_num:
+                break
 
         rospy.loginfo("Robot's turn over")
         rospy.loginfo("Starting human's turn")
