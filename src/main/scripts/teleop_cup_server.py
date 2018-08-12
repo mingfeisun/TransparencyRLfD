@@ -141,7 +141,7 @@ def cb_moveCup(_req):
 
 rospy.init_node('teleop_cup_sever', anonymous=True)
 cupPoseCtrl = CupPoseControl()
-server = actionlib.SimpleActionServer('teleop_cup', CupMoveAction, cb_moveCup, False)
+server = actionlib.SimpleActionServer('teleop_cup_server', CupMoveAction, cb_moveCup, False)
 server.start()
 rospy.loginfo('starting service teleop_cup: finished')
 rospy.spin()

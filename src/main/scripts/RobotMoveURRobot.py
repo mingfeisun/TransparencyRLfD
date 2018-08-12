@@ -7,7 +7,6 @@ from main.srv import *
 from CupPoseControl import CupPoseControl
 from QLearningModel import QLearningModel
 
-from autonomous_learning import position2State
 from autonomous_learning import action2Position
 from autonomous_learning import action2Goal
 
@@ -33,7 +32,7 @@ class RobotMoveURRobot:
     def __init__(self):
         self.cup_pos_ctrl = CupPoseControl()
 
-        self.client = actionlib.SimpleActionClient('teleop_cup', CupMoveAction)
+        self.client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
         self.client.wait_for_server()
 
         rospy.wait_for_service('update_learning')
@@ -63,8 +62,8 @@ class RobotMoveURRobot:
         self.orien_z = 0.0131916335966
         self.orien_w = 0.681650193211
 
-        self.robot_pose = Pose()
-        self.robot_pose.position.x = -0.65
+        self.robot_pose = Pose() 
+        self.robot_pose.position.x = -0.65 
         self.robot_pose.position.y = 0
         self.robot_pose.position.z = 0.8
 
@@ -215,8 +214,8 @@ class RobotMoveURRobot:
             rospy.loginfo('Table not configured yet')
             sys.exit(1)
 
-        curr_state = position2State(beg_pos)
-        goal_state = position2State(dst_pos)
+        curr_state = str((beg_pos[0], beg_pos[1]))
+        goal_state = str((dst_pos[0], dst_pos[1]))
 
         max_action_num = 100
 
@@ -234,10 +233,7 @@ class RobotMoveURRobot:
             result = self.client.get_result()
             reward = result.reward
 
-            next_pos = []
-            next_pos.append(result.state_x)
-            next_pos.append(result.state_y)
-            next_state = position2State(next_pos)
+            next_state = str((result.state_x, result.state_y))
 
             self.update_learning(curr_state, curr_action, reward, next_state)
             curr_state = next_state

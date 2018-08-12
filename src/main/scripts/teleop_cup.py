@@ -71,14 +71,14 @@ class SimpleKeyTeleop():
         self._x = 0
         self._y = 0
 
-        self.client = actionlib.SimpleActionClient('teleop_cup', CupMoveAction)
+        self.client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
         self.client.wait_for_server()
         self.goal = CupMoveGoal()
 
         self.lfd = LearningFromDemo()
 
-        rospy.wait_for_service('update_learning')
-        self.update_learning = rospy.ServiceProxy('update_learning', LearningDemo)
+        rospy.wait_for_service('update_learning_demo')
+        self.update_learning = rospy.ServiceProxy('update_learning_demo', LearningDemo)
 
         rospy.wait_for_service('reset_demo')
         self.reset_demo = rospy.ServiceProxy('reset_demo', LearningDemo)
@@ -191,8 +191,8 @@ class SimpleKeyTeleop():
 
     def getState(self):
         cup_pos = rospy.get_param('table_params/cup_pos')
-        state = cup_pos[0]*10 + cup_pos[1]
-        return state
+        state = (cup_pos[0], cup_pos[1])
+        return str(state)
 
 
 def main(stdscr):
