@@ -10,9 +10,6 @@ from QLearningModel import QLearningModel
 
 from CupPoseControl import CupPoseControl
 
-def position2State(_position):
-    return _position[0] * 10 + _position[1]
-
 def action2Goal(_action):
     goal = CupMoveGoal()
     if _action == 0:
@@ -66,8 +63,8 @@ if __name__ == "__main__":
     for i in range(iteration_num):
         cupPose.setPoseDefault()
         count_actions = 0
-        curr_state = position2State(beg_pos)
-        goal_state = position2State(dst_pos)
+        curr_state = str((beg_pos[0], beg_pos[1]))
+        goal_state = str((dst_pos[0], dst_pos[1]))
 
         while curr_state != goal_state:
             # rospy.loginfo('Current state: %d'%(curr_state))
@@ -84,11 +81,7 @@ if __name__ == "__main__":
             reward = result.reward
             # rospy.loginfo('Reward received: %d'%(reward))
 
-            next_pos = []
-            next_pos.append(result.state_x)
-            next_pos.append(result.state_y)
-            next_state = position2State(next_pos)
-            # rospy.loginfo('Next state: %d'%(next_state))
+            next_state = str((result.state_x, result.state_y))
 
             learning_model.learn(curr_state, curr_action, reward, next_state)
             curr_state = next_state
