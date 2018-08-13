@@ -30,7 +30,7 @@ class LearningFromDemo:
 
     def compute_potential(self, _s, _s_demo):
         diff = self.state_distance(_s, _s_demo)
-        return -math.exp(-2 * diff * diff)
+        return -2*math.exp(-2 * diff * diff)
 
     def update_potential(self, _s_demo, _a_demo):
         for i in range(10):
@@ -44,9 +44,6 @@ class LearningFromDemo:
         a_demo = _req.action
         r_demo = _req.reward
         ns_demo = _req.next_state
-
-        msg_state = String(s_demo)
-        self.pub.publish(msg_state)
 
         self.model.learn(s_demo, a_demo, r_demo, ns_demo)
         return LearningDemoResponse(True)

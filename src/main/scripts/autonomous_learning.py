@@ -24,7 +24,7 @@ def action2Goal(_action):
     if _action == 3:
         goal.x = 1
         goal.y = 0
-    goal.time_factor = 1
+    goal.time_factor = 100
     return goal
 
 def action2Position(_action, _pos):
@@ -41,12 +41,12 @@ def action2Position(_action, _pos):
 
 if __name__ == "__main__":
     rospy.init_node('teleop_cup', anonymous=True)
-    client = actionlib.SimpleActionClient('teleop_cup', CupMoveAction)
+    client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
     client.wait_for_server()
 
     # 0: left, 1: up, 2: right, 3: down
     learning_model = QLearningModel([0, 1, 2, 3])
-    iteration_num = 50
+    iteration_num = 200
 
     if rospy.has_param('table_params'):
         beg_pos = rospy.get_param('table_params/cup_pos_init')

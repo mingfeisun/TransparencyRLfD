@@ -63,8 +63,8 @@ class RobotMoveURRobot:
         self.orien_w = 0.681650193211
 
         self.robot_pose = Pose() 
-        self.robot_pose.position.x = -0.65 
-        self.robot_pose.position.y = 0
+        self.robot_pose.position.x = -0.75 
+        self.robot_pose.position.y = 0.0
         self.robot_pose.position.z = 0.8
 
         self.addCollision()
@@ -106,7 +106,7 @@ class RobotMoveURRobot:
         collision_bottom_pose.header.frame_id = "world"
         collision_bottom_pose.pose.orientation.w = 1.0
         collision_bottom_pose.pose.position.x = 0.4
-        collision_bottom_pose.pose.position.z = -0.2
+        collision_bottom_pose.pose.position.z = -0.1
         collision_bottom_name = "collision_bottom"
         self.scene.add_box(collision_bottom_name, collision_bottom_pose, size=(2, 2, 0.2))
 
@@ -200,6 +200,9 @@ class RobotMoveURRobot:
         target_x, target_y, target_z = self.cupPoseToRobotPose(cup_pose)
         self.moveArmTo(target_x, target_y, target_z)
 
+    def cb_action_request_dummy(self, _feedback):
+        pass
+
     def moveCup(self):
         # set cup pose to init position
         self.cup_pos_ctrl.setPoseDefault()
@@ -217,7 +220,7 @@ class RobotMoveURRobot:
         curr_state = str((beg_pos[0], beg_pos[1]))
         goal_state = str((dst_pos[0], dst_pos[1]))
 
-        max_action_num = 100
+        max_action_num = 500
 
         action_num = 0
 
@@ -225,7 +228,8 @@ class RobotMoveURRobot:
             curr_action = self.query_action(curr_state).action
             curr_goal = action2Goal(curr_action)
 
-            self.client.send_goal(curr_goal, feedback_cb=self.cb_action_request)
+            # self.client.send_goal(curr_goal, feedback_cb=self.cb_action_request)
+            self.client.send_goal(curr_goal, feedback_cb=self.cb_action_request_dummy)
             self.client.wait_for_result()
 
             action_num = action_num + 1
@@ -250,15 +254,59 @@ class RobotMoveURRobot:
     def cupPoseToRobotPose(self, _cup_pose):
         delta_x = _cup_pose.position.x - self.robot_pose.position.x
         delta_y = _cup_pose.position.y - self.robot_pose.position.y
-        delta_z = _cup_pose.position.z - self.robot_pose.position.z + 0.15
+        delta_z = _cup_pose.position.z - self.robot_pose.position.z + 0.10
 
         return delta_x, delta_y, delta_z
 
     def gesturing(self):
-        pass
+        # 0: left, 1: up, 2: right, 3: down
+        if rospy.has_param('table_params'):
+            beg_pos = rospy.get_param('table_params/cup_pos_init')
+            dst_pos = rospy.get_param('table_params/mat_pos')
+        else:
+            rospy.loginfo('Table not configured yet')
+            sys.exit(1)
+
+        curr_state = str((beg_pos[0], beg_pos[1]))
+        goal_state = str((dst_pos[0], dst_pos[1]))
+
+        confidence_level = 1.0
+        actions_remaining = 3
+
+        # while curr_state != goal_state or confidence_level >= 1.0:
+        while curr_state != goal_state or actions_taken >= 1:
+            curr_action = self.query_action(curr_state).action
+            curr_goal = action2Goal(curr_action)
+
+            # self.client.send_goal(curr_goal, feedback_cb=self.cb_action_request)
+            self.client.send_goal(curr_goal, feedback_cb=self.cb_action_request_dummy)
+            self.client.wait_for_result()
+
+            actions_remaining = actions_remaining - 1
+
+            result = self.client.get_result()
+            reward = result.reward
+
+            next_state = str((result.state_x, result.state_y))
+
+            self.update_learning(curr_state, curr_action, reward, next_state)
+            curr_state = next_state
+
+            if action_num > max_action_num:
+                break
+
+        rospy.loginfo("Robot's turn over")
+        rospy.loginfo("Starting human's turn")
+
+        self.cup_pos_ctrl.setPoseDefault()
+        self.moveArmToCupTop()
 
     def pausing(self):
         pass
+
+    def mixedMotion(self):
+        pass
+
 
 if __name__ == "__main__":
     # for testing

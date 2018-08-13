@@ -18,7 +18,7 @@ class QLearningModel:
         # using Bellman Optimality Equation to update q function
         new_q = reward + self.discount_lambda * max(self.q_table[next_state])
         self.q_table[state][action] += self.learning_alpha * (new_q - current_q)
-        self.print_Q_table(state)
+        self.print_Q_table(state, action, reward, next_state)
 
     # epsilon-greedy policy
     def get_action(self, state):
@@ -39,7 +39,7 @@ class QLearningModel:
         return action
 
     # vis: 0(left), 1(up), 2(right), 3(down)
-    def print_Q_table(self, _curr_state):
+    def print_Q_table(self, _curr_state, _action, _reward, _next_state):
         with open('q_table_value.txt', 'w') as fout:
             fout.write("State \t Left \t Up \t Right \t Down \n")
             for i in range(10):
@@ -49,6 +49,7 @@ class QLearningModel:
                         %(i, j, self.q_table[state][0],self.q_table[state][1], 
                         self.q_table[state][2],self.q_table[state][3]))
                     if state == _curr_state:
+                        fout.write("reward: %.2f, next state: %s\n"%(_reward, _next_state))
                         fout.write("----------------------------------------\n")
 
     def reset(self):
