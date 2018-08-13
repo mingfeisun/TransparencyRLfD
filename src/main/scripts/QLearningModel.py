@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 import random
 from collections import defaultdict
 
@@ -7,28 +7,49 @@ class QLearningModel:
     def __init__(self, actions):
         # actions = [0, 1, 2, 3]
         self.actions = actions
-        self.learning_rate = 0.8
-        self.discount_factor = 0.5
-        self.epsilon = 0.01
+        self.learning_alpha = 0.8
+        self.discount_lambda = 0.5
+        self.epsilon = 0.5
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
     # update q function with sample <s, a, r, s'>
     def learn(self, state, action, reward, next_state):
         current_q = self.q_table[state][action]
         # using Bellman Optimality Equation to update q function
-        new_q = reward + self.discount_factor * max(self.q_table[next_state])
-        self.q_table[state][action] += self.learning_rate * (new_q - current_q)
+        new_q = reward + self.discount_lambda * max(self.q_table[next_state])
+        self.q_table[state][action] += self.learning_alpha * (new_q - current_q)
+        self.print_Q_table(state)
 
     # epsilon-greedy policy
     def get_action(self, state):
-        if np.random.rand() < self.epsilon:
+        if numpy.random.rand() < self.epsilon:
             # take random action
-            action = np.random.choice(self.actions)
+            action = numpy.random.choice(self.actions)
         else:
             # take action according to the q function table
             state_action = self.q_table[state]
             action = self.arg_max(state_action)
         return action
+
+    # max 
+    def get_action_max(self, state):
+        # take action according to the q function table
+        state_action = self.q_table[state]
+        action = self.arg_max(state_action)
+        return action
+
+    # vis: 0(left), 1(up), 2(right), 3(down)
+    def print_Q_table(self, _curr_state):
+        with open('q_table_value.txt', 'w') as fout:
+            fout.write("State \t Left \t Up \t Right \t Down \n")
+            for i in range(10):
+                for j in range(10):
+                    state = str((i, j))
+                    fout.write("(%2d, %2d) \t %.2f \t %.2f \t %.2f \t %.2f \n"
+                        %(i, j, self.q_table[state][0],self.q_table[state][1], 
+                        self.q_table[state][2],self.q_table[state][3]))
+                    if state == _curr_state:
+                        fout.write("----------------------------------------\n")
 
     def reset(self):
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
