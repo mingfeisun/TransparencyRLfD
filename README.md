@@ -71,8 +71,11 @@ To-do list:
 
 1. ~~Need to find out the possible robot motions that would affect the human perception~~
 2. Need to implement the related motions
-* Gesturing motions: policy-based
-* Pausing motions: state-uncertainty-based
+* ~~Gesturing motions: policy-based~~
+<img src="docs/arm-gesturing-x2.gif" alt="drawing" width="600px"/>
+
+* ~~Pausing motions: state-uncertainty-based~~
+<img src="docs/arm-pausing-x2.gif" alt="drawing" width="600px"/>
 
 3. Need to determine the learning model and evaluate the model effects towards the learning
 
