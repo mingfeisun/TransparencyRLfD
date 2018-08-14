@@ -175,9 +175,11 @@ class SimpleKeyTeleop():
 
             r_x, r_y, r_z = self.robot_move.cupPoseToRobotPose(result.cup_pose)
             self.robot_move.moveArmTo(r_x, r_y, r_z)
+            self.robot_move.gesturing(next_state)
 
             if reward == REWARD_GOAL:
-                self.robot_move.moveCup()
+                # self.robot_move.moveCup()
+                self.robot_move.initDemo()
 
     def goalToAction(self, _goal):
         if _goal.x == 0 and _goal.y == -1:

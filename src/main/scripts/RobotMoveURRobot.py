@@ -28,6 +28,8 @@ from trajectory_msgs.msg import *
 
 from main.msg import CupMoveAction, CupMoveGoal, CupMoveResult, CupMoveFeedback
 
+from spawn_table_models import getXYZFromIJ
+
 class RobotMoveURRobot:
     def __init__(self):
         self.cup_pos_ctrl = CupPoseControl()
@@ -40,6 +42,9 @@ class RobotMoveURRobot:
 
         rospy.wait_for_service('query_action')
         self.query_action = rospy.ServiceProxy('query_action', QueryAction)
+
+        rospy.wait_for_service('query_action_confidence')
+        self.query_action_confidence = rospy.ServiceProxy('query_action_confidence', QueryActionConfidence)
 
         self.robot = moveit_commander.RobotCommander()
 
@@ -68,6 +73,14 @@ class RobotMoveURRobot:
         self.robot_pose.position.z = 0.8
 
         self.addCollision()
+
+        self.grid_size = rospy.get_param('table_params/grid_size')
+        self.table_size = rospy.get_param('table_params/table_size')
+        self.margin_size = rospy.get_param('table_params/margin_size')
+
+    def initDemo(self):
+        self.initCup()
+        self.moveArmToCupTop()
 
     def initCup(self):
         # set to init position
@@ -139,17 +152,7 @@ class RobotMoveURRobot:
         self.current_pose = self.group_man.get_current_pose().pose
 
     def moveArmTo(self, _x, _y, _z):
-        pose_goal = geometry_msgs.msg.Pose()
-
-        pose_goal.orientation.x = self.orien_x
-        pose_goal.orientation.y = self.orien_y
-        pose_goal.orientation.z = self.orien_z
-        pose_goal.orientation.w = self.orien_w
-
-        pose_goal.position.x = _x
-        pose_goal.position.y = _y
-        pose_goal.position.z = _z
-
+        pose_goal = self.generateRobotPose(_x, _y, _z)
         self.group_man.clear_pose_targets()
         self.group_man.set_pose_target(pose_goal)
         self.group_man.go(wait=True)
@@ -258,48 +261,96 @@ class RobotMoveURRobot:
 
         return delta_x, delta_y, delta_z
 
-    def gesturing(self):
-        # 0: left, 1: up, 2: right, 3: down
-        if rospy.has_param('table_params'):
-            beg_pos = rospy.get_param('table_params/cup_pos_init')
-            dst_pos = rospy.get_param('table_params/mat_pos')
-        else:
-            rospy.loginfo('Table not configured yet')
-            sys.exit(1)
+    def xyzToRobotPose(self, _x, _y, _z):
+        delta_x = _x - self.robot_pose.position.x
+        delta_y = _y - self.robot_pose.position.y
+        delta_z = _z - self.robot_pose.position.z + 0.10
 
-        curr_state = str((beg_pos[0], beg_pos[1]))
+        return delta_x, delta_y, delta_z
+    
+    def moveArmToState(self, _state):
+        curr_state_tuple = eval(_state)
+
+        x, y, z = getXYZFromIJ(curr_state_tuple[0], 
+                                curr_state_tuple[1], 
+                                self.grid_size, 
+                                self.table_size, 
+                                self.margin_size)
+
+        x_, y_, z_ = self.xyzToRobotPose(x, y, z)
+        self.moveArmTo(x_, y_, z_)
+
+    def generateRobotPose(self, _x, _y, _z):
+        pose_goal = geometry_msgs.msg.Pose()
+
+        pose_goal.orientation.x = self.orien_x
+        pose_goal.orientation.y = self.orien_y
+        pose_goal.orientation.z = self.orien_z
+        pose_goal.orientation.w = self.orien_w
+
+        pose_goal.position.x = _x
+        pose_goal.position.y = _y
+        pose_goal.position.z = _z
+
+        return pose_goal
+
+    def stateToRobotPose(self, _state):
+        curr_state_tuple = eval(_state)
+
+        x, y, z = getXYZFromIJ(curr_state_tuple[0], 
+                                curr_state_tuple[1], 
+                                self.grid_size, 
+                                self.table_size, 
+                                self.margin_size)
+
+        x_, y_, z_ = self.xyzToRobotPose(x, y, z)
+        return self.generateRobotPose(x_, y_, z_)
+
+    def gesturing(self, _state):
+        # 0: left, 1: up, 2: right, 3: down
+        state_stack = []
+        waypoints = []
+
+        # waypoints.append(copy.deepcopy(self.current_pose))
+
+        dst_pos = rospy.get_param('table_params/mat_pos')
+
+        curr_state = _state
         goal_state = str((dst_pos[0], dst_pos[1]))
 
-        confidence_level = 1.0
-        actions_remaining = 3
+        confidence_level = 1.2
 
-        # while curr_state != goal_state or confidence_level >= 1.0:
-        while curr_state != goal_state or actions_taken >= 1:
-            curr_action = self.query_action(curr_state).action
-            curr_goal = action2Goal(curr_action)
+        result = self.query_action_confidence(curr_state)
 
-            # self.client.send_goal(curr_goal, feedback_cb=self.cb_action_request)
-            self.client.send_goal(curr_goal, feedback_cb=self.cb_action_request_dummy)
-            self.client.wait_for_result()
+        # self.moveArmToState(curr_state)
+        state_stack.append(curr_state)
+        # waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
 
-            actions_remaining = actions_remaining - 1
+        while result.confidence <= confidence_level and curr_state != goal_state:
+            this_state = result.next_state
+            # self.moveArmToState(curr_state)
+            state_stack.append(this_state)
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
+            result = self.query_action_confidence(this_state)
 
-            result = self.client.get_result()
-            reward = result.reward
+        # (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+        # self.group_man.execute(plan, wait=True)
 
-            next_state = str((result.state_x, result.state_y))
+        # waypoints = []
+        # self.group_man.stop()
+        # self.group_man.clear_pose_targets()
 
-            self.update_learning(curr_state, curr_action, reward, next_state)
-            curr_state = next_state
+        state_stack.pop()
+        
+        while len(state_stack) != 0:
+            this_state = state_stack.pop()
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
+            # self.moveArmToState(this_state)
 
-            if action_num > max_action_num:
-                break
-
-        rospy.loginfo("Robot's turn over")
-        rospy.loginfo("Starting human's turn")
-
-        self.cup_pos_ctrl.setPoseDefault()
-        self.moveArmToCupTop()
+        (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+        self.group_man.execute(plan, wait=True)
+        # self.group_man.go(wait=True)
+        # self.group_man.retime_trajectory(self.group_man.get_current_pose(), plan, 1.0)
 
     def pausing(self):
         pass
@@ -314,6 +365,7 @@ if __name__ == "__main__":
     test = RobotMoveURRobot()
     test.initRobotPose()
     test.moveArmToCupTop()
+    test.gesturing('(0, 0)')
     # freq = rospy.Rate(1)
     # while not rospy.is_shutdown():
     #     test.test_moveArmRandom()
