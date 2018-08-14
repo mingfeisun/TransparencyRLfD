@@ -38,6 +38,16 @@ class QLearningModel:
         action = self.arg_max(state_action)
         return action
 
+    # max 
+    def get_action_list(self, state):
+        # take action according to the q function table
+        state_action = self.q_table[state]
+        return state_action[:]
+
+    # get q-table
+    def get_q_table(self):
+        return self.q_table[:]
+
     # vis: 0(left), 1(up), 2(right), 3(down)
     def print_Q_table(self, _curr_state, _action, _reward, _next_state):
         with open('q_table_value.txt', 'w') as fout:

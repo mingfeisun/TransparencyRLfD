@@ -2,6 +2,8 @@
 import rospy
 import math
 import numpy
+from scipy.stats import entropy
+
 from main.srv import *
 
 from QLearningModel import QLearningModel
@@ -16,12 +18,14 @@ class LearningFromDemo:
         rospy.Service('update_learning_demo', LearningDemo, self.cb_learning_demo)
         rospy.Service('update_learning', LearningDemo, self.cb_learning)
         rospy.Service('query_action', QueryAction, self.cb_queryAction)
-        # rospy.Service('query_action', QueryAction, self.cb_queryAction_potential)
+        rospy.Service('query_action_confidence', QueryActionConfidence, self.cb_queryActionConfidence)
         rospy.Service('reset_demo', ResetDemoLearning, self.cb_reset)
 
         self.pub = rospy.Publisher('current_state', String, queue_size=1, latch=True)
 
         self.potential = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
+
+        self.invtemp = 1
 
     def state_distance(self, _s, _s_demo):
         s = eval(_s)
@@ -39,6 +43,23 @@ class LearningFromDemo:
                 pot = self.compute_potential(state, _s_demo)
                 self.potential[state][_a_demo] += pot
 
+    def get_next_state(self, _state, _action):
+        # four actions: 0(left), 1(up), 2(right), 3(down)
+        state = eval(_state)
+        next_state_i = state[0]
+        next_state_j = state[1]
+
+        if _action == 0:
+            next_state_j -= 1
+        if _action == 1:
+            next_state_i -= 1
+        if _action == 2:
+            next_state_j += 1
+        if _action == 3:
+            next_state_i += 1
+
+        return str((next_state_i, next_state_j))
+
     def cb_learning(self, _req):
         s_demo = _req.state
         a_demo = _req.action
@@ -54,7 +75,7 @@ class LearningFromDemo:
         r_demo = _req.reward
         ns_demo = _req.next_state
 
-        msg_state = String(s_demo)
+        msg_state = String(ns_demo)
         self.pub.publish(msg_state)
 
         self.update_potential(s_demo, a_demo)
@@ -75,6 +96,26 @@ class LearningFromDemo:
     def cb_queryAction(self, _req):
         action = self.model.get_action(_req.state)
         return QueryActionResponse(action)
+
+    def calculateConfidence(self, _action_list):
+        temp_prob = numpy.exp(self.invtemp*_action_list) / numpy.sum(numpy.exp(self.invtemp*_action_list))
+        return entropy(temp_prob)
+
+    def cb_queryActionConfidence(self, _req):
+        state = _req.state
+
+        action_list = self.model.get_action_list(state)
+        action = self.model.arg_max(action_list)
+
+        confidence = self.calculateConfidence(action_list)
+        next_state = self.get_next_state(state, action)
+
+        result = QueryActionConfidenceResponse()
+        result.action = action
+        result.confidence = confidence
+        result.next_state = next_state
+
+        return result
 
     def cb_reset(self, _req):
         self.model.reset()

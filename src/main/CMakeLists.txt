@@ -61,6 +61,7 @@ add_service_files(
   FILES
   LearningDemo.srv
   QueryAction.srv
+  QueryActionConfidence.srv
   ResetDemoLearning.srv
 )
 
