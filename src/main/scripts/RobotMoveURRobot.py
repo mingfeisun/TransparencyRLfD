@@ -19,7 +19,7 @@ import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
 from geometry_msgs.msg import Pose
-from math import pi
+from math import pi, cos, sin
 from std_msgs.msg import String
 from moveit_commander.conversions import pose_to_list
 
@@ -311,6 +311,8 @@ class RobotMoveURRobot:
         state_stack = []
         waypoints = []
 
+        self.pausing(_state, 0.1)
+
         # waypoints.append(copy.deepcopy(self.current_pose))
 
         dst_pos = rospy.get_param('table_params/mat_pos')
@@ -352,8 +354,33 @@ class RobotMoveURRobot:
         # self.group_man.go(wait=True)
         # self.group_man.retime_trajectory(self.group_man.get_current_pose(), plan, 1.0)
 
-    def pausing(self):
-        pass
+    def generateCircle(self, _center, _radius):
+        center_x = _center.position.x
+        center_y = _center.position.y
+        center_z = _center.position.z
+
+        circle_pose = []
+        for theta in range(0, 360, 5):
+            # sin, cos takes rad as input
+            delta_x = _radius * cos(theta*pi/180)
+            delta_y = _radius * sin(theta*pi/180)
+
+            circle_pose.append(
+                copy.deepcopy(self.generateRobotPose(center_x + delta_x, center_y + delta_y, center_z))
+                )
+        return circle_pose
+
+    def pausing(self, _state, _confidence):
+        waypoints = []
+        circle_center = self.stateToRobotPose(_state)
+        waypoints.append(copy.deepcopy(circle_center))
+
+        waypoints.extend(self.generateCircle(circle_center, 0.02))
+
+        waypoints.append(copy.deepcopy(circle_center))
+
+        (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+        self.group_man.execute(plan, wait=True)
 
     def mixedMotion(self):
         pass
