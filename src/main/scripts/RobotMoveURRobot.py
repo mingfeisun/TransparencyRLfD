@@ -15,6 +15,7 @@ from main.msg import CupMoveAction
 import sys
 import copy
 import random
+import numpy
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
@@ -311,7 +312,7 @@ class RobotMoveURRobot:
         state_stack = []
         waypoints = []
 
-        self.pausing(_state, 0.1)
+        # self.pausing(_state, 0.1)
 
         # waypoints.append(copy.deepcopy(self.current_pose))
 
@@ -354,7 +355,7 @@ class RobotMoveURRobot:
         # self.group_man.go(wait=True)
         # self.group_man.retime_trajectory(self.group_man.get_current_pose(), plan, 1.0)
 
-    def generateCircle(self, _center, _radius):
+    def generateCircle(self, _center, _radius=0.02):
         center_x = _center.position.x
         center_y = _center.position.y
         center_z = _center.position.z
@@ -375,15 +376,55 @@ class RobotMoveURRobot:
         circle_center = self.stateToRobotPose(_state)
         waypoints.append(copy.deepcopy(circle_center))
 
-        waypoints.extend(self.generateCircle(circle_center, 0.02))
+        waypoints.extend(self.generateCircle(circle_center))
 
         waypoints.append(copy.deepcopy(circle_center))
 
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
         self.group_man.execute(plan, wait=True)
 
-    def mixedMotion(self):
-        pass
+    def mixedMotion(self, _state):
+        # 0: left, 1: up, 2: right, 3: down
+        state_stack = []
+        waypoints = []
+        confidence_array = []
+
+        dst_pos = rospy.get_param('table_params/mat_pos')
+
+        curr_state = _state
+        goal_state = str((dst_pos[0], dst_pos[1]))
+
+        confidence_level = 1.2
+
+        result = self.query_action_confidence(curr_state)
+        confidence_array.append(result.confidence)
+
+        state_stack.append(curr_state)
+
+        while result.confidence <= confidence_level and curr_state != goal_state:
+            this_state = result.next_state
+            state_stack.append(this_state)
+            # waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
+            result = self.query_action_confidence(this_state)
+            confidence_array.append(result.confidence)
+
+        idx_max = numpy.argmax(state_stack)
+        for i in range(len(state_stack)):
+            each = state_stack[i]
+            this_robot_pose = self.stateToRobotPose(each)
+            waypoints.append(copy.deepcopy(this_robot_pose))
+            if i == idx_max and len(state_stack) != 1:
+                waypoints.extend(copy.deepcopy(self.generateCircle(this_robot_pose)))
+            result = self.query_action_confidence(each)
+
+        state_stack.pop()
+        
+        while len(state_stack) != 0:
+            this_state = state_stack.pop()
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
+
+        (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+        self.group_man.execute(plan, wait=True)
 
 
 if __name__ == "__main__":
