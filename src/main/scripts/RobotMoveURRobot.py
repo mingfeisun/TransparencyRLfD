@@ -31,8 +31,15 @@ from main.msg import CupMoveAction, CupMoveGoal, CupMoveResult, CupMoveFeedback
 
 from spawn_table_models import getXYZFromIJ
 
+NULL = -1
+GESTURING = 0
+GESTURING_PAUSING = 1
+GESTURING_SPEED = 2
+
 class RobotMoveURRobot:
     def __init__(self):
+        self.show_state_mode = GESTURING_PAUSING
+
         self.cup_pos_ctrl = CupPoseControl()
 
         self.client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
@@ -281,6 +288,19 @@ class RobotMoveURRobot:
         x_, y_, z_ = self.xyzToRobotPose(x, y, z)
         self.moveArmTo(x_, y_, z_)
 
+    def showStatus(self, _state):
+        if self.show_state_mode == NULL:
+            return
+        if self.show_state_mode == GESTURING:
+            self.gesturing(_state)
+            return
+        if self.show_state_mode == GESTURING_PAUSING:
+            self.gesturingPausing(_state)
+            return
+        if self.show_state_mode == GESTURING_SPEED:
+            self.gesturingAdaptiveSpeed(_state)
+            return
+
     def generateRobotPose(self, _x, _y, _z):
         pose_goal = geometry_msgs.msg.Pose()
 
@@ -311,8 +331,6 @@ class RobotMoveURRobot:
         # 0: left, 1: up, 2: right, 3: down
         state_stack = []
         waypoints = []
-
-        # self.pausing(_state, 0.1)
 
         # waypoints.append(copy.deepcopy(self.current_pose))
 
@@ -355,6 +373,9 @@ class RobotMoveURRobot:
         # self.group_man.go(wait=True)
         # self.group_man.retime_trajectory(self.group_man.get_current_pose(), plan, 1.0)
 
+    def gesturingAdaptiveSpeed(self, _state):
+        pass
+
     def generateCircle(self, _center, _radius=0.02):
         center_x = _center.position.x
         center_y = _center.position.y
@@ -383,7 +404,7 @@ class RobotMoveURRobot:
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
         self.group_man.execute(plan, wait=True)
 
-    def mixedMotion(self, _state):
+    def gesturingPausing(self, _state):
         # 0: left, 1: up, 2: right, 3: down
         state_stack = []
         waypoints = []
