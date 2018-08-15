@@ -17,6 +17,7 @@ import copy
 import random
 import numpy
 import moveit_commander
+from moveit_commander import RobotTrajectory
 import moveit_msgs.msg
 import geometry_msgs.msg
 from geometry_msgs.msg import Pose
@@ -31,6 +32,8 @@ from main.msg import CupMoveAction, CupMoveGoal, CupMoveResult, CupMoveFeedback
 
 from spawn_table_models import getXYZFromIJ
 
+TESTING_MODE = False
+
 NULL = -1
 GESTURING = 0
 GESTURING_PAUSING = 1
@@ -38,21 +41,24 @@ GESTURING_SPEED = 2
 
 class RobotMoveURRobot:
     def __init__(self):
-        self.show_state_mode = GESTURING_PAUSING
+        self.SHOW_STATE_MODE = GESTURING_SPEED
+
+        self.BASE_SPEED = 2
 
         self.cup_pos_ctrl = CupPoseControl()
 
-        self.client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
-        self.client.wait_for_server()
+        if not TESTING_MODE:
+            self.client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
+            self.client.wait_for_server()
 
-        rospy.wait_for_service('update_learning')
-        self.update_learning = rospy.ServiceProxy('update_learning', LearningDemo)
+            rospy.wait_for_service('update_learning')
+            self.update_learning = rospy.ServiceProxy('update_learning', LearningDemo)
 
-        rospy.wait_for_service('query_action')
-        self.query_action = rospy.ServiceProxy('query_action', QueryAction)
+            rospy.wait_for_service('query_action')
+            self.query_action = rospy.ServiceProxy('query_action', QueryAction)
 
-        rospy.wait_for_service('query_action_confidence')
-        self.query_action_confidence = rospy.ServiceProxy('query_action_confidence', QueryActionConfidence)
+            rospy.wait_for_service('query_action_confidence')
+            self.query_action_confidence = rospy.ServiceProxy('query_action_confidence', QueryActionConfidence)
 
         self.robot = moveit_commander.RobotCommander()
 
@@ -289,15 +295,15 @@ class RobotMoveURRobot:
         self.moveArmTo(x_, y_, z_)
 
     def showStatus(self, _state):
-        if self.show_state_mode == NULL:
+        if self.SHOW_STATE_MODE == NULL:
             return
-        if self.show_state_mode == GESTURING:
+        if self.SHOW_STATE_MODE == GESTURING:
             self.gesturing(_state)
             return
-        if self.show_state_mode == GESTURING_PAUSING:
+        if self.SHOW_STATE_MODE == GESTURING_PAUSING:
             self.gesturingPausing(_state)
             return
-        if self.show_state_mode == GESTURING_SPEED:
+        if self.SHOW_STATE_MODE == GESTURING_SPEED:
             self.gesturingAdaptiveSpeed(_state)
             return
 
@@ -373,8 +379,148 @@ class RobotMoveURRobot:
         # self.group_man.go(wait=True)
         # self.group_man.retime_trajectory(self.group_man.get_current_pose(), plan, 1.0)
 
+    def test_gesturing(self):
+        # 0: left, 1: up, 2: right, 3: down
+        waypoints = []
+
+        state_stack = ["(0, 0)", "(1, 0)", "(2, 0)", "(3, 0)", 
+                        "(4, 0)", "(5, 0)", "(4, 0)", "(3, 0)", 
+                        "(2, 0)", "(1, 0)", "(0, 0)"]
+
+        confidence_list = [1.2, 1.8, 0.3, 1.4, 2.0, 0.6, 2.0, 1.4, 0.3, 1.8, 1.2]
+
+        '''
+        spd_ratio_inc = numpy.arange(1, 4.60, 0.04)
+        spd_ratio_dec = numpy.arange(4.60, 1, -0.04)
+
+        spd_ratio = numpy.concatenate((spd_ratio_inc, spd_ratio_dec))
+
+        temp_robot_pose = self.stateToRobotPose("(0, 0)")
+        self.moveArmToPose(temp_robot_pose)
+
+        for each_state in state_stack:
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(each_state)))
+
+        state_stack.pop()
+        
+        while len(state_stack) != 0:
+            this_state = state_stack.pop()
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
+        '''
+
+        for each_state in state_stack:
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(each_state)))
+
+        (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+
+        # self.group_man.execute(plan, wait=True)
+
+        adaptive_plan = RobotTrajectory()
+        adaptive_plan.joint_trajectory = copy.deepcopy(plan.joint_trajectory)
+
+        n_points = len(plan.joint_trajectory.points)
+        # n_joints = len(plan.joint_trajectory.joint_names)
+
+        def getSpeedRatio(_i):
+            # interpolate
+            y_speed = numpy.array(numpy.log(confidence_list))/self.BASE_SPEED
+            x_speed = numpy.linspace(0, n_points, len(y_speed))
+            return numpy.interp(_i, x_speed, y_speed)
+        
+        print "Point number: ", n_points
+        adaptive_plan.joint_trajectory.points[0].time_from_start = plan.joint_trajectory.points[0].time_from_start 
+        adaptive_plan.joint_trajectory.points[0].velocities = copy.deepcopy(tuple(numpy.array(plan.joint_trajectory.points[0].velocities) * getSpeedRatio(0)))
+        adaptive_plan.joint_trajectory.points[0].accelerations = copy.deepcopy(tuple(numpy.array(plan.joint_trajectory.points[0].accelerations) * getSpeedRatio(0)))
+        adaptive_plan.joint_trajectory.points[0].positions = copy.deepcopy(plan.joint_trajectory.points[0].positions)
+
+        for i in range(1, n_points):
+            pre_time_plan = plan.joint_trajectory.points[i-1].time_from_start 
+            pre_time_adative_plan = adaptive_plan.joint_trajectory.points[i-1].time_from_start 
+
+            this_time_from_start = plan.joint_trajectory.points[i].time_from_start 
+            adaptive_plan.joint_trajectory.points[i].time_from_start = (this_time_from_start - pre_time_plan)/getSpeedRatio(i) + pre_time_adative_plan
+
+            adaptive_plan.joint_trajectory.points[i].velocities = copy.deepcopy(tuple(numpy.array(plan.joint_trajectory.points[i].velocities) * getSpeedRatio(i)))
+            adaptive_plan.joint_trajectory.points[i].accelerations = copy.deepcopy(tuple(numpy.array(plan.joint_trajectory.points[i].accelerations) * getSpeedRatio(i)))
+            adaptive_plan.joint_trajectory.points[i].positions = copy.deepcopy(plan.joint_trajectory.points[i].positions)
+            
+            # for j in range(n_joints):
+            #     adaptive_plan.joint_trajectory.points[i].velocities[j] = plan.joint_trajectory.points[i].velocities[j] * spd_ratio[i]
+            #     adaptive_plan.joint_trajectory.points[i].accelerations[j] = plan.joint_trajectory.points[i].accelerations[j] * spd_ratio[i]
+            #     adaptive_plan.joint_trajectory.points[i].positions[j] = plan.joint_trajectory.points[i].positions[j]
+
+        self.group_man.execute(adaptive_plan, wait=True)
+
     def gesturingAdaptiveSpeed(self, _state):
-        pass
+        # 0: left, 1: up, 2: right, 3: down
+        state_stack = []
+        waypoints = []
+        confidence_list = []
+        temp_confidence_list = []
+
+        dst_pos = rospy.get_param('table_params/mat_pos')
+
+        curr_state = _state
+        goal_state = str((dst_pos[0], dst_pos[1]))
+
+        confidence_level = 1.2
+
+        result = self.query_action_confidence(curr_state)
+
+        state_stack.append(curr_state)
+        confidence_list.append(result.confidence)
+        temp_confidence_list.append(result.confidence)
+
+        while result.confidence <= confidence_level and curr_state != goal_state:
+            this_state = result.next_state
+            state_stack.append(this_state)
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
+            result = self.query_action_confidence(this_state)
+            confidence_list.append(result.confidence)
+            temp_confidence_list.append(result.confidence)
+
+        state_stack.pop()
+        temp_confidence_list.pop()
+        
+        while len(state_stack) != 0:
+            this_state = state_stack.pop()
+            this_confidence = temp_confidence_list.pop()
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
+            confidence_list.append(this_confidence)
+
+        if len(waypoints) == 0:
+            return
+
+        (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+
+        adaptive_plan = RobotTrajectory()
+        adaptive_plan.joint_trajectory = copy.deepcopy(plan.joint_trajectory)
+
+        n_points = len(plan.joint_trajectory.points)
+
+        def getSpeedRatio(_i):
+            # interpolate
+            y_speed = (numpy.log(confidence_list) + 1)/self.BASE_SPEED
+            x_speed = numpy.linspace(0, n_points, len(y_speed))
+            return numpy.interp(_i, x_speed, y_speed)
+        
+        adaptive_plan.joint_trajectory.points[0].time_from_start = plan.joint_trajectory.points[0].time_from_start 
+        adaptive_plan.joint_trajectory.points[0].velocities = copy.deepcopy(tuple(numpy.array(plan.joint_trajectory.points[0].velocities) * getSpeedRatio(0)))
+        adaptive_plan.joint_trajectory.points[0].accelerations = copy.deepcopy(tuple(numpy.array(plan.joint_trajectory.points[0].accelerations) * getSpeedRatio(0)))
+        adaptive_plan.joint_trajectory.points[0].positions = copy.deepcopy(plan.joint_trajectory.points[0].positions)
+
+        for i in range(1, n_points):
+            pre_time_plan = plan.joint_trajectory.points[i-1].time_from_start 
+            pre_time_adative_plan = adaptive_plan.joint_trajectory.points[i-1].time_from_start 
+
+            this_time_from_start = plan.joint_trajectory.points[i].time_from_start 
+            adaptive_plan.joint_trajectory.points[i].time_from_start = (this_time_from_start - pre_time_plan)/getSpeedRatio(i) + pre_time_adative_plan
+
+            adaptive_plan.joint_trajectory.points[i].velocities = copy.deepcopy(tuple(numpy.array(plan.joint_trajectory.points[i].velocities) * getSpeedRatio(i)))
+            adaptive_plan.joint_trajectory.points[i].accelerations = copy.deepcopy(tuple(numpy.array(plan.joint_trajectory.points[i].accelerations) * getSpeedRatio(i)))
+            adaptive_plan.joint_trajectory.points[i].positions = copy.deepcopy(plan.joint_trajectory.points[i].positions)
+
+        self.group_man.execute(adaptive_plan, wait=True)
 
     def generateCircle(self, _center, _radius=0.02):
         center_x = _center.position.x
@@ -449,12 +595,16 @@ class RobotMoveURRobot:
 
 
 if __name__ == "__main__":
+    TESTING_MODE = True
+
     # for testing
     rospy.init_node('robot_move_ur', anonymous=True)
     test = RobotMoveURRobot()
-    test.initRobotPose()
+    # test.initRobotPose()
     test.moveArmToCupTop()
-    test.gesturing('(0, 0)')
+    test.test_gesturing()
+    # test.moveArmToCupTop()
+    # test.gesturing('(0, 0)')
     # freq = rospy.Rate(1)
     # while not rospy.is_shutdown():
     #     test.test_moveArmRandom()
