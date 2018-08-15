@@ -41,9 +41,9 @@ GESTURING_SPEED = 2
 
 class RobotMoveURRobot:
     def __init__(self):
-        self.SHOW_STATE_MODE = GESTURING_SPEED
+        self.SHOW_STATE_MODE = GESTURING_PAUSING
 
-        self.BASE_SPEED = 2
+        self.BASE_SPEED_RATIO = 0.8
 
         self.cup_pos_ctrl = CupPoseControl()
 
@@ -423,7 +423,7 @@ class RobotMoveURRobot:
 
         def getSpeedRatio(_i):
             # interpolate
-            y_speed = numpy.array(numpy.log(confidence_list))/self.BASE_SPEED
+            y_speed = self.BASE_SPEED_RATIO / numpy.array(numpy.log(confidence_list))
             x_speed = numpy.linspace(0, n_points, len(y_speed))
             return numpy.interp(_i, x_speed, y_speed)
         
@@ -498,11 +498,15 @@ class RobotMoveURRobot:
 
         n_points = len(plan.joint_trajectory.points)
 
+        # interpolate
+        _y_speed = self.BASE_SPEED_RATIO / numpy.array(confidence_list)
+        _x_speed = numpy.linspace(0, n_points, len(_y_speed))
         def getSpeedRatio(_i):
-            # interpolate
-            y_speed = (numpy.log(confidence_list) + 1)/self.BASE_SPEED
-            x_speed = numpy.linspace(0, n_points, len(y_speed))
-            return numpy.interp(_i, x_speed, y_speed)
+            _ratio = numpy.interp(_i, _x_speed, _y_speed)
+            _th_ratio = 2
+            if _ratio < _th_ratio: 
+                return _ratio
+            return _th_ratio
         
         adaptive_plan.joint_trajectory.points[0].time_from_start = plan.joint_trajectory.points[0].time_from_start 
         adaptive_plan.joint_trajectory.points[0].velocities = copy.deepcopy(tuple(numpy.array(plan.joint_trajectory.points[0].velocities) * getSpeedRatio(0)))
@@ -537,6 +541,16 @@ class RobotMoveURRobot:
                 copy.deepcopy(self.generateRobotPose(center_x + delta_x, center_y + delta_y, center_z))
                 )
         return circle_pose
+
+    def generateUpDown(self, _center):
+        center_x = _center.position.x
+        center_y = _center.position.y
+        center_z = _center.position.z
+
+        up_down_pose = []
+        up_down_pose.append( copy.deepcopy(self.generateRobotPose(center_x, center_y, center_z + 0.10)))
+        up_down_pose.append( copy.deepcopy(self.generateRobotPose(center_x, center_y, center_z)))
+        return up_down_pose
 
     def pausing(self, _state, _confidence):
         waypoints = []
@@ -581,10 +595,13 @@ class RobotMoveURRobot:
             this_robot_pose = self.stateToRobotPose(each)
             waypoints.append(copy.deepcopy(this_robot_pose))
             if i == idx_max and len(state_stack) != 1:
-                waypoints.extend(copy.deepcopy(self.generateCircle(this_robot_pose)))
+                # waypoints.extend(copy.deepcopy(self.generateCircle(this_robot_pose)))
+                waypoints.extend(copy.deepcopy(self.generateUpDown(this_robot_pose)))
             result = self.query_action_confidence(each)
 
         state_stack.pop()
+        if len(state_stack) == 0:
+            return
         
         while len(state_stack) != 0:
             this_state = state_stack.pop()
@@ -602,7 +619,11 @@ if __name__ == "__main__":
     test = RobotMoveURRobot()
     # test.initRobotPose()
     test.moveArmToCupTop()
-    test.test_gesturing()
+    waypoints = test.generateUpDown(test.current_pose)
+
+    (plan, _) = test.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+    test.group_man.execute(plan, wait=True)
+    # test.test_gesturing()
     # test.moveArmToCupTop()
     # test.gesturing('(0, 0)')
     # freq = rospy.Rate(1)
