@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 import sys
 import rospy
+import rosbag
 import curses
 import math
 import actionlib
 from main.msg import CupMoveAction, CupMoveGoal, CupMoveActionResult, CupMoveActionFeedback
 
-from geometry_msgs.msg import Pose
+from terminal_input import TextWindow
+
+from std_msgs.msg import Int16
 from gazebo_msgs.msg import ModelState
 
 from CupPoseControl import CupPoseControl
@@ -16,52 +19,13 @@ from RobotMoveURRobot import RobotMoveURRobot
 
 from main.srv import *
 
+from threading import Lock
+
 REWARD_GOAL = 10
 
 # from https://github.com/ros-teleop/teleop_tools/blob/melodic-devel/key_teleop/scripts/key_teleop.py
-class TextWindow():
-
-    _screen = None
-    _window = None
-    _num_lines = None
-
-    def __init__(self, stdscr, lines=10):
-        self._screen = stdscr
-        self._screen.nodelay(True)
-        curses.curs_set(0)
-
-        self._num_lines = lines
-
-    def read_key(self):
-        keycode = self._screen.getch()
-        return keycode if keycode != -1 else None
-
-    def clear(self):
-        self._screen.clear()
-
-    def write_line(self, lineno, message):
-        if lineno < 0 or lineno >= self._num_lines:
-            raise ValueError, 'lineno out of bounds'
-        height, width = self._screen.getmaxyx()
-        y = (height / self._num_lines) * lineno
-        x = 10
-        for text in message.split('\n'):
-            text = text.ljust(width)
-            self._screen.addstr(y, x, text)
-            y += 1
-
-    def refresh(self):
-        self._screen.refresh()
-
-    def beep(self):
-        curses.flash()
-
-# from https://github.com/ros-teleop/teleop_tools/blob/melodic-devel/key_teleop/scripts/key_teleop.py
 class SimpleKeyTeleop():
-    def __init__(self, interface):
-        self._interface = interface
-        self._pub_cmd = rospy.Publisher('key_input', Pose)
-
+    def __init__(self):
         self._hz = 50
 
         self._forward_rate = 0.8
@@ -70,6 +34,8 @@ class SimpleKeyTeleop():
         self._last_pressed = {}
         self._x = 0
         self._y = 0
+
+        self._lock = Lock()
 
         self.client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
         self.client.wait_for_server()
@@ -84,6 +50,7 @@ class SimpleKeyTeleop():
         self.reset_demo = rospy.ServiceProxy('reset_demo', LearningDemo)
 
         rospy.loginfo('Connect to teleop_cup server: finished')
+
 
     movement_bindings = {
         curses.KEY_UP:    (-1,  0),
@@ -105,15 +72,17 @@ class SimpleKeyTeleop():
 
         self._running = True
         rospy.loginfo('Waiting for coming keys')
-        while self._running:
-            while True:
-                keycode = self._interface.read_key()
-                if keycode is None:
-                    break
-                self._key_pressed(keycode)
-            self._set_x_y()
-            self._send_goal()
-            rate.sleep()
+        self._pub_cmd = rospy.Subscriber('key_input', Int16, self.cb_key_in)
+
+
+    def cb_key_in(self, _feedback):
+        if self._lock.acquire():
+            keycode = _feedback.data
+            if keycode is -1:
+                self._set_x_y()
+                self._send_goal()
+            self._key_pressed(keycode)
+            self._lock.release()
 
     def _set_x_y(self):
         now = rospy.get_time()
@@ -138,21 +107,6 @@ class SimpleKeyTeleop():
             self._last_pressed[keycode] = rospy.get_time()
 
     def _send_goal(self):
-        self._interface.clear()
-        output_str = ""
-        if self._x > 0:
-            output_str = "backward "
-        if self._x < 0:
-            output_str = output_str + "forward "
-        if self._y > 0:
-            output_str = output_str + "to right "
-        if self._y < 0:
-            output_str = output_str + "to left "
-
-        if len(output_str) != 0:
-            self._interface.write_line(2, 'Moving %s' %output_str)
-        self._interface.write_line(5, 'Use arrow keys to move, q to exit.')
-        self._interface.refresh()
 
         if self._x != 0 or self._y != 0:
             self.goal.x = self._x
@@ -198,8 +152,28 @@ class SimpleKeyTeleop():
 
 
 def main(stdscr):
-    app = SimpleKeyTeleop(TextWindow(stdscr))
+    wnd = TextWindow(stdscr)
+    app = SimpleKeyTeleop()
     app.run()
+
+    while True:
+        wnd.read_key()
+
+        wnd.clear()
+        output_str = ""
+        if app._x > 0:
+            output_str = "backward "
+        if app._x < 0:
+            output_str = output_str + "forward "
+        if app._y > 0:
+            output_str = output_str + "to right "
+        if app._y < 0:
+            output_str = output_str + "to left "
+
+        if len(output_str) != 0:
+            wnd.write_line(2, 'Moving %s' %output_str)
+        wnd.write_line(5, 'Use arrow keys to move, q to exit.')
+        wnd.refresh()
 
 if __name__ == "__main__":
     rospy.init_node('teleop_cup', anonymous=True)
