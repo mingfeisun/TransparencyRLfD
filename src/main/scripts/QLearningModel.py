@@ -20,7 +20,7 @@ class QLearningModel:
         # using Bellman Optimality Equation to update q function
         new_q = reward + self.discount_lambda * max(self.q_table[next_state])
         self.q_table[state][action] += self.learning_alpha * (new_q - current_q)
-        # self.print_Q_table(state, action, reward, next_state)
+        self.print_Q_table(state, action, reward, next_state)
 
     # epsilon-greedy policy
     def get_action(self, state):

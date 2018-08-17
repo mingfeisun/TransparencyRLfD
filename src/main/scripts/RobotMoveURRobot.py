@@ -41,7 +41,7 @@ GESTURING_SPEED = 2
 
 class RobotMoveURRobot:
     def __init__(self):
-        self.SHOW_STATE_MODE = GESTURING_PAUSING
+        self.SHOW_STATE_MODE = GESTURING
 
         self.BASE_SPEED_RATIO = 0.8
 
@@ -50,6 +50,9 @@ class RobotMoveURRobot:
         if not TESTING_MODE:
             self.client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
             self.client.wait_for_server()
+
+            self.client_fake = actionlib.SimpleActionClient('teleop_cup_server_fake', CupMoveAction)
+            self.client_fake.wait_for_server()
 
             rospy.wait_for_service('update_learning')
             self.update_learning = rospy.ServiceProxy('update_learning', LearningDemo)
@@ -268,6 +271,46 @@ class RobotMoveURRobot:
         self.cup_pos_ctrl.setPoseDefault()
         self.moveArmToCupTop()
 
+    def autoLearn(self):
+        # 0: left, 1: up, 2: right, 3: down
+        if rospy.has_param('table_params'):
+            beg_pos = rospy.get_param('table_params/cup_pos_init')
+            dst_pos = rospy.get_param('table_params/mat_pos')
+        else:
+            rospy.loginfo('Table not configured yet')
+            sys.exit(1)
+
+        curr_state = str((beg_pos[0], beg_pos[1]))
+        goal_state = str((dst_pos[0], dst_pos[1]))
+
+        max_action_num = 500
+
+        action_num = 0
+
+        while curr_state != goal_state:
+            curr_action = self.query_action(curr_state).action
+            curr_goal = action2Goal(curr_action)
+
+            # self.client_fake.send_goal(curr_goal, feedback_cb=self.cb_action_request)
+            self.client_fake.send_goal(curr_goal, feedback_cb=self.cb_action_request_dummy)
+            self.client_fake.wait_for_result()
+
+            action_num = action_num + 1
+
+            result = self.client_fake.get_result()
+            reward = result.reward
+
+            next_state = str((result.state_x, result.state_y))
+
+            self.update_learning(curr_state, curr_action, reward, next_state)
+            curr_state = next_state
+
+            if action_num > max_action_num:
+                break
+
+        rospy.loginfo("Robot's turn over")
+        rospy.loginfo("Starting human's turn")
+
     def cupPoseToRobotPose(self, _cup_pose):
         delta_x = _cup_pose.position.x - self.robot_pose.position.x
         delta_y = _cup_pose.position.y - self.robot_pose.position.y
@@ -356,6 +399,8 @@ class RobotMoveURRobot:
         while result.confidence <= confidence_level and curr_state != goal_state:
             this_state = result.next_state
             # self.moveArmToState(curr_state)
+            if this_state in state_stack:
+                break
             state_stack.append(this_state)
             waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
             result = self.query_action_confidence(this_state)
@@ -473,6 +518,8 @@ class RobotMoveURRobot:
 
         while result.confidence <= confidence_level and curr_state != goal_state:
             this_state = result.next_state
+            if this_state in state_stack:
+                break
             state_stack.append(this_state)
             waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
             result = self.query_action_confidence(this_state)

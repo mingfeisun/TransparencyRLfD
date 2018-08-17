@@ -4,7 +4,7 @@ import rospy
 
 from std_msgs.msg import Int16
 
-# from https://github.com/ros-teleop/teleop_tools/blob/melodic-devel/key_teleop/scripts/key_teleop.py
+# adapted from https://github.com/ros-teleop/teleop_tools/blob/melodic-devel/key_teleop/scripts/key_teleop.py
 class TextWindow():
     _screen = None
     _window = None

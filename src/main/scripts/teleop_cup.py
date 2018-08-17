@@ -23,7 +23,7 @@ from threading import Lock
 
 REWARD_GOAL = 10
 
-# from https://github.com/ros-teleop/teleop_tools/blob/melodic-devel/key_teleop/scripts/key_teleop.py
+# adapted from https://github.com/ros-teleop/teleop_tools/blob/melodic-devel/key_teleop/scripts/key_teleop.py
 class SimpleKeyTeleop():
     def __init__(self):
         self._hz = 50
@@ -129,7 +129,7 @@ class SimpleKeyTeleop():
             self.robot_move.showStatus(next_state)
 
             if reward == REWARD_GOAL:
-                # self.robot_move.moveCup()
+                self.robot_move.autoLearn()
                 self.robot_move.initDemo()
 
     def goalToAction(self, _goal):
