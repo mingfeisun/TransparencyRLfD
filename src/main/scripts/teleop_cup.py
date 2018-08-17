@@ -70,10 +70,8 @@ class SimpleKeyTeleop():
         self.robot_move.initRobotPose()
         self.robot_move.moveArmToCupTop()
 
-        self._running = True
         rospy.loginfo('Waiting for coming keys')
         self._pub_cmd = rospy.Subscriber('key_input', Int16, self.cb_key_in)
-
 
     def cb_key_in(self, _feedback):
         if self._lock.acquire():
@@ -101,8 +99,7 @@ class SimpleKeyTeleop():
 
     def _key_pressed(self, keycode):
         if keycode == ord('q'):
-            self._running = False
-            rospy.signal_shutdown('Bye')
+            rospy.signal_shutdown('Shutting down. See you later')
         elif keycode in self.movement_bindings:
             self._last_pressed[keycode] = rospy.get_time()
 
@@ -150,15 +147,12 @@ class SimpleKeyTeleop():
         state = (cup_pos[0], cup_pos[1])
         return str(state)
 
-
-def main(stdscr):
+def main_rosbag(stdscr):
     wnd = TextWindow(stdscr)
     app = SimpleKeyTeleop()
     app.run()
 
-    while True:
-        wnd.read_key()
-
+    while not rospy.is_shutdown():
         wnd.clear()
         output_str = ""
         if app._x > 0:
@@ -175,9 +169,56 @@ def main(stdscr):
         wnd.write_line(5, 'Use arrow keys to move, q to exit.')
         wnd.refresh()
 
+def main_key_in(stdscr):
+    wnd = TextWindow(stdscr)
+    app = SimpleKeyTeleop()
+    app.run()
+
+    import os
+    from time import gmtime, strftime
+    timestamp = strftime("%Y%m%d%H%M%S", gmtime())
+    prefix = 'bag'
+    if not os.path.exists(prefix):
+        os.mkdir(prefix)
+    bag_filename = os.path.join(prefix, "%s.bag"%timestamp)
+    saved_bag = rosbag.Bag(bag_filename, 'w')
+
+    ## def bagClose():
+    ##     saved_bag.reindex()
+    ##     saved_bag.close()
+    ##     rospy.loginfo('Done')
+
+    ## rospy.on_shutdown(bagClose)
+
+    while not rospy.is_shutdown():
+        keycode = wnd.pub_key()
+
+        keycode_msg = Int16()
+        keycode_msg.data = keycode
+
+        saved_bag.write('key_input', keycode_msg)
+
+        wnd.clear()
+        output_str = ""
+        if app._x > 0:
+            output_str = "backward "
+        if app._x < 0:
+            output_str = output_str + "forward "
+        if app._y > 0:
+            output_str = output_str + "to right "
+        if app._y < 0:
+            output_str = output_str + "to left "
+
+        if len(output_str) != 0:
+            wnd.write_line(2, 'Moving %s' %output_str)
+        wnd.write_line(5, 'Use arrow keys to move, q to exit.')
+        wnd.refresh()
+    # rospy.loginfo('Done')
+
 if __name__ == "__main__":
-    rospy.init_node('teleop_cup', anonymous=True)
+    rospy.init_node('teleop_cup', anonymous=True, disable_signals=True)
     try:
-        curses.wrapper(main)
+        # curses.wrapper(main_key_in)
+        curses.wrapper(main_rosbag)
     except rospy.ROSInterruptException:
         pass
