@@ -38,7 +38,8 @@
   </include>
 
   <node name="spawn_table_models" pkg="main" type="spawn_table_models.py"/>
-  <node name="teleop_cup_server" pkg="main" type="teleop_cup_server.py"/>
 
+  <node name="teleop_cup_server" pkg="main" type="teleop_cup_server.py"/>
+  <node name="teleop_cup_server_fake" pkg="main" type="teleop_cup_server_fake.py"/>
 </launch>
 

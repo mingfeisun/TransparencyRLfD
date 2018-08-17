@@ -10,6 +10,8 @@ from QLearningModel import QLearningModel
 
 from CupPoseControl import CupPoseControl
 
+FAKE_MODE = True
+
 def action2Goal(_action):
     goal = CupMoveGoal()
     if _action == 0:
@@ -41,8 +43,12 @@ def action2Position(_action, _pos):
 
 if __name__ == "__main__":
     rospy.init_node('teleop_cup', anonymous=True)
-    client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
-    client.wait_for_server()
+    if FAKE_MODE:
+        client = actionlib.SimpleActionClient('teleop_cup_server_fake', CupMoveAction)
+        client.wait_for_server()
+    else:
+        client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
+        client.wait_for_server()
 
     # 0: left, 1: up, 2: right, 3: down
     learning_model = QLearningModel([0, 1, 2, 3])
@@ -61,10 +67,14 @@ if __name__ == "__main__":
     cupPose = CupPoseControl()
 
     for i in range(iteration_num):
-        cupPose.setPoseDefault()
+        if not FAKE_MODE:
+            cupPose.setPoseDefault()
         count_actions = 0
         curr_state = str((beg_pos[0], beg_pos[1]))
         goal_state = str((dst_pos[0], dst_pos[1]))
+
+        rospy.loginfo('Start status: %s'%str(curr_state))
+        rospy.loginfo('Goal status: %s'%str(goal_state))
 
         while curr_state != goal_state:
             # rospy.loginfo('Current state: %d'%(curr_state))
@@ -85,6 +95,7 @@ if __name__ == "__main__":
 
             learning_model.learn(curr_state, curr_action, reward, next_state)
             curr_state = next_state
+            rospy.loginfo('Start status: %s'%str(curr_state))
 
             count_actions = count_actions + 1
 
