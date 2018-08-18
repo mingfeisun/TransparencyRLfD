@@ -91,20 +91,12 @@ def cb_moveCup(_req):
         server.set_aborted(action_res, 'Collision detected')
         return
 
-    x, y, z = getXYZFromIJ(pre_i, pre_j, grid_size, table_size, margin_size)
+    x, y, z = getXYZFromIJ(target_i, target_j, grid_size, table_size, margin_size)
 
     target_pose = Pose()
     target_pose.position.x = x
     target_pose.position.y = y
     target_pose.position.z = z
-
-    step_size = 50
-    time_factor = _req.time_factor
-
-    delta_x = move_i * grid_size/step_size
-    delta_y = move_j * grid_size/step_size
-
-    rate = rospy.Rate(step_size*time_factor)
 
     rospy.loginfo('OK to go')
 
@@ -113,23 +105,24 @@ def cb_moveCup(_req):
     action_res.state_y = target_j
     action_res.cup_pose = target_pose
 
+    rospy.set_param('table_params/cup_pos', [target_i, target_j])
+
     if check_result == REACH_GOAL:
         action_res.reward = REWARD_GOAL
         action_res.distance_to_go = 0
         rospy.loginfo('Mission completed')
         server.set_preempted(action_res, 'Mission completed')
+
     if check_result == OK_TO_GO:
         action_res.reward = REWARD_MOVE
         action_res.distance_to_go = 0 # need to define
         rospy.loginfo('Moveing one step')
         server.set_succeeded(action_res, 'Moving one step')
 
-    rospy.set_param('table_params/cup_pos', [target_i, target_j])
-
 
 rospy.init_node('teleop_cup_sever_fake', anonymous=True)
 cupPoseCtrl = CupPoseControl()
 server = actionlib.SimpleActionServer('teleop_cup_server_fake', CupMoveAction, cb_moveCup, False)
 server.start()
-rospy.loginfo('starting service teleop_cup: finished')
+rospy.loginfo('starting service teleop_cup_sever_fake: finished')
 rospy.spin()
