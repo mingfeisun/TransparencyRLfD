@@ -4,11 +4,13 @@ import rospy
 import curses
 import math
 import actionlib
+
+from main.srv import *
 from main.msg import CupMoveAction, CupMoveGoal, CupMoveActionResult, CupMoveActionFeedback
 
-from QLearningModel import QLearningModel
-
 from CupPoseControl import CupPoseControl
+
+from LearningFromDemo import LearningFromDemo
 
 FAKE_MODE = True
 
@@ -50,8 +52,15 @@ if __name__ == "__main__":
         client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
         client.wait_for_server()
 
+    lfd = LearningFromDemo()
+
+    rospy.wait_for_service('update_learning')
+    client_learning = rospy.ServiceProxy('update_learning', LearningDemo)
+
+    rospy.wait_for_service('query_action')
+    client_action = rospy.ServiceProxy('query_action', QueryAction)
+
     # 0: left, 1: up, 2: right, 3: down
-    learning_model = QLearningModel([0, 1, 2, 3])
     iteration_num = 200
 
     if rospy.has_param('table_params'):
@@ -67,19 +76,22 @@ if __name__ == "__main__":
     cupPose = CupPoseControl()
 
     for i in range(iteration_num):
-        if not FAKE_MODE:
-            cupPose.setPoseDefault()
         count_actions = 0
         curr_state = str((beg_pos[0], beg_pos[1]))
         goal_state = str((dst_pos[0], dst_pos[1]))
 
-        rospy.loginfo('Start status: %s'%str(curr_state))
-        rospy.loginfo('Goal status: %s'%str(goal_state))
+        if FAKE_MODE:
+            rospy.set_param('table_params/cup_pos', beg_pos)
+        else:
+            cupPose.setPoseDefault()
+
+        # rospy.loginfo('Start status: %s'%str(curr_state))
+        # rospy.loginfo('Goal status: %s'%str(goal_state))
 
         while curr_state != goal_state:
             # rospy.loginfo('Current state: %d'%(curr_state))
 
-            curr_action = learning_model.get_action(curr_state)
+            curr_action = client_action(curr_state).action
             # rospy.loginfo('Current action: %d'%(curr_action))
 
             curr_goal = action2Goal(curr_action)
@@ -92,10 +104,10 @@ if __name__ == "__main__":
             # rospy.loginfo('Reward received: %d'%(reward))
 
             next_state = str((result.state_x, result.state_y))
+            client_learning(curr_state, curr_action, reward, next_state)
 
-            learning_model.learn(curr_state, curr_action, reward, next_state)
             curr_state = next_state
-            rospy.loginfo('Start status: %s'%str(curr_state))
+            # rospy.loginfo('Start status: %s'%str(curr_state))
 
             count_actions = count_actions + 1
 

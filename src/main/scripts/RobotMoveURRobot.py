@@ -280,19 +280,24 @@ class RobotMoveURRobot:
             rospy.loginfo('Table not configured yet')
             sys.exit(1)
 
+        rospy.loginfo("Autonomous learning")
+
         curr_state = str((beg_pos[0], beg_pos[1]))
         goal_state = str((dst_pos[0], dst_pos[1]))
 
         max_action_num = 500
 
+        rospy.set_param('table_params/cup_pos', beg_pos)
+
         action_num = 0
 
         while curr_state != goal_state:
+            rospy.loginfo("State: %s"%curr_state)
             curr_action = self.query_action(curr_state).action
             curr_goal = action2Goal(curr_action)
 
             # self.client_fake.send_goal(curr_goal, feedback_cb=self.cb_action_request)
-            self.client_fake.send_goal(curr_goal, feedback_cb=self.cb_action_request_dummy)
+            self.client_fake.send_goal(curr_goal)
             self.client_fake.wait_for_result()
 
             action_num = action_num + 1
@@ -385,7 +390,7 @@ class RobotMoveURRobot:
 
         dst_pos = rospy.get_param('table_params/mat_pos')
 
-        curr_state = _state
+        curr_state = copy.deepcopy(_state)
         goal_state = str((dst_pos[0], dst_pos[1]))
 
         confidence_level = 1.2
@@ -397,13 +402,13 @@ class RobotMoveURRobot:
         # waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
 
         while result.confidence <= confidence_level and curr_state != goal_state:
-            this_state = result.next_state
+            curr_state = result.next_state
             # self.moveArmToState(curr_state)
-            if this_state in state_stack:
+            if curr_state in state_stack:
                 break
-            state_stack.append(this_state)
-            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
-            result = self.query_action_confidence(this_state)
+            state_stack.append(curr_state)
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+            result = self.query_action_confidence(curr_state)
 
         # (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
         # self.group_man.execute(plan, wait=True)
@@ -412,11 +417,15 @@ class RobotMoveURRobot:
         # self.group_man.stop()
         # self.group_man.clear_pose_targets()
 
-        state_stack.pop()
-        
-        while len(state_stack) != 0:
-            this_state = state_stack.pop()
-            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
+        if len(state_stack) == 1:
+            return
+
+        waypoints.append(copy.deepcopy(self.stateToRobotPose(_state)))
+
+        # state_stack.pop()
+        # while len(state_stack) != 0:
+        #     this_state = state_stack.pop()
+        #     waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
             # self.moveArmToState(this_state)
 
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)

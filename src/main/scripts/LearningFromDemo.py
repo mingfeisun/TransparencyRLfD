@@ -66,7 +66,13 @@ class LearningFromDemo:
         r_demo = _req.reward
         ns_demo = _req.next_state
 
-        self.model.learn(s_demo, a_demo, r_demo, ns_demo)
+        # change reward
+        na_demo = self.model.get_action_max(ns_demo)
+        f_value = self.model.discount_lambda * self.potential[ns_demo][na_demo] - self.potential[s_demo][a_demo]
+        new_reward =  r_demo + f_value
+
+        self.model.learn(s_demo, a_demo, new_reward, ns_demo)
+
         return LearningDemoResponse(True)
 
     def cb_learning_demo(self, _req):
