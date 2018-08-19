@@ -67,7 +67,7 @@ class QLambdaLearningModel:
 
     # vis: 0(left), 1(up), 2(right), 3(down)
     def print_Q_table(self, _curr_state, _action, _reward, _next_state):
-        with open('q_table_value.txt', 'w') as fout:
+        with open('log/q_table_value.txt', 'w') as fout:
             fout.write("State \t Left \t Up \t Right \t Down \n")
             for i in range(10):
                 for j in range(10):
@@ -81,7 +81,7 @@ class QLambdaLearningModel:
 
     # vis: 0(left), 1(up), 2(right), 3(down)
     def print_eligibility_traces(self, _curr_state, _action, _reward, _next_state):
-        with open('eligibility_traces.txt', 'w') as fout:
+        with open('log/eligibility_traces.txt', 'w') as fout:
             fout.write("State \t Left \t Up \t Right \t Down \n")
             for i in range(10):
                 for j in range(10):
