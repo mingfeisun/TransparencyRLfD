@@ -7,6 +7,8 @@ from scipy.stats import entropy
 from main.srv import *
 
 from QLearningModel import QLearningModel
+from QLambdaLearningModel import QLambdaLearningModel
+
 from collections import defaultdict
 
 from std_msgs.msg import String
@@ -14,7 +16,9 @@ from std_msgs.msg import String
 class LearningFromDemo:
     def __init__(self):
         # four actions: 0(left), 1(up), 2(right), 3(down)
-        self.model = QLearningModel([0, 1, 2, 3])
+        # self.model = QLearningModel([0, 1, 2, 3])
+
+        self.model = QLambdaLearningModel([0, 1, 2, 3])
         rospy.Service('update_learning_demo', LearningDemo, self.cb_learning_demo)
         rospy.Service('update_learning', LearningDemo, self.cb_learning)
         rospy.Service('query_action', QueryAction, self.cb_queryAction)
