@@ -391,6 +391,8 @@ class RobotMoveURRobot:
         dst_pos = rospy.get_param('table_params/mat_pos')
 
         curr_state = copy.deepcopy(_state)
+        init_state = copy.deepcopy(_state)
+
         goal_state = str((dst_pos[0], dst_pos[1]))
 
         confidence_level = 1.2
@@ -420,7 +422,7 @@ class RobotMoveURRobot:
         if len(state_stack) == 1:
             return
 
-        waypoints.append(copy.deepcopy(self.stateToRobotPose(_state)))
+        waypoints.append(copy.deepcopy(self.stateToRobotPose(init_state)))
 
         # state_stack.pop()
         # while len(state_stack) != 0:
