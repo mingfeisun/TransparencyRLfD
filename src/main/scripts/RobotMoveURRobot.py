@@ -41,7 +41,7 @@ GESTURING_SPEED = 2
 
 class RobotMoveURRobot:
     def __init__(self):
-        self.SHOW_STATE_MODE = GESTURING
+        self.SHOW_STATE_MODE = GESTURING_SPEED
 
         self.BASE_SPEED_RATIO = 0.8
 
@@ -271,7 +271,7 @@ class RobotMoveURRobot:
         self.cup_pos_ctrl.setPoseDefault()
         self.moveArmToCupTop()
 
-    def autoLearn(self):
+    def autoLearn(self, _rounds=1):
         # 0: left, 1: up, 2: right, 3: down
         if rospy.has_param('table_params'):
             beg_pos = rospy.get_param('table_params/cup_pos_init')
@@ -285,33 +285,32 @@ class RobotMoveURRobot:
         curr_state = str((beg_pos[0], beg_pos[1]))
         goal_state = str((dst_pos[0], dst_pos[1]))
 
-        max_action_num = 500
+        for _ in range(_rounds):
+            max_action_num = 500
+            rospy.set_param('table_params/cup_pos', beg_pos)
+            action_num = 0
 
-        rospy.set_param('table_params/cup_pos', beg_pos)
+            while curr_state != goal_state:
+                rospy.loginfo("State: %s"%curr_state)
+                curr_action = self.query_action(curr_state).action
+                curr_goal = action2Goal(curr_action)
 
-        action_num = 0
+                # self.client_fake.send_goal(curr_goal, feedback_cb=self.cb_action_request)
+                self.client_fake.send_goal(curr_goal)
+                self.client_fake.wait_for_result()
 
-        while curr_state != goal_state:
-            rospy.loginfo("State: %s"%curr_state)
-            curr_action = self.query_action(curr_state).action
-            curr_goal = action2Goal(curr_action)
+                action_num = action_num + 1
 
-            # self.client_fake.send_goal(curr_goal, feedback_cb=self.cb_action_request)
-            self.client_fake.send_goal(curr_goal)
-            self.client_fake.wait_for_result()
+                result = self.client_fake.get_result()
+                reward = result.reward
 
-            action_num = action_num + 1
+                next_state = str((result.state_x, result.state_y))
 
-            result = self.client_fake.get_result()
-            reward = result.reward
+                self.update_learning(curr_state, curr_action, reward, next_state)
+                curr_state = next_state
 
-            next_state = str((result.state_x, result.state_y))
-
-            self.update_learning(curr_state, curr_action, reward, next_state)
-            curr_state = next_state
-
-            if action_num > max_action_num:
-                break
+                if action_num > max_action_num:
+                    break
 
         rospy.loginfo("Robot's turn over")
         rospy.loginfo("Starting human's turn")

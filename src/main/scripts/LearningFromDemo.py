@@ -77,6 +77,11 @@ class LearningFromDemo:
 
         self.model.learn(s_demo, a_demo, new_reward, ns_demo)
 
+        ## reset eligibility traces, Q(lambda) learning only
+        from teleop_cup_server import REACH_GOAL
+        if r_demo == REACH_GOAL:
+            self.model.reset_eligibility_traces()
+
         return LearningDemoResponse(True)
 
     def cb_learning_demo(self, _req):

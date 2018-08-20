@@ -96,6 +96,9 @@ class QLambdaLearningModel:
     def reset(self):
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
+    def reset_eligibility_traces(self):
+        self.eligibility_traces = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
+
     @staticmethod
     def arg_max(state_action):
         max_index_list = []
