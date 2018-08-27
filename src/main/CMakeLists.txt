@@ -63,6 +63,8 @@ add_service_files(
   QueryAction.srv
   QueryActionConfidence.srv
   ResetDemoLearning.srv
+  QueryMatchTraces.srv
+  QueryAvgConfidence.srv
 )
 
 ## Generate actions in the 'action' folder
