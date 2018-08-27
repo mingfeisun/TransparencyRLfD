@@ -16,6 +16,7 @@ import sys
 import copy
 import random
 import numpy
+import rospy
 import moveit_commander
 from moveit_commander import RobotTrajectory
 import moveit_msgs.msg
@@ -43,7 +44,7 @@ class RobotMoveURRobot:
     def __init__(self):
         self.SHOW_STATE_MODE = GESTURING_SPEED
 
-        self.BASE_SPEED_RATIO = 0.8
+        self.BASE_SPEED_RATIO = 0.5
 
         self.cup_pos_ctrl = CupPoseControl()
 
@@ -62,6 +63,14 @@ class RobotMoveURRobot:
 
             rospy.wait_for_service('query_action_confidence')
             self.query_action_confidence = rospy.ServiceProxy('query_action_confidence', QueryActionConfidence)
+
+            rospy.wait_for_service('query_match_traces')
+            self.query_match_traces = rospy.ServiceProxy('query_match_traces', QueryMatchTraces)
+            self.threshold_m = 2
+
+            rospy.wait_for_service('query_avg_confidence')
+            self.query_avg_confidence = rospy.ServiceProxy('query_avg_confidence', QueryAvgConfidence)
+            self.threshold_confidence = 1.2
 
         self.robot = moveit_commander.RobotCommander()
 
@@ -286,6 +295,7 @@ class RobotMoveURRobot:
         goal_state = str((dst_pos[0], dst_pos[1]))
 
         for _ in range(_rounds):
+            print "Round: %d"%_
             max_action_num = 500
             rospy.set_param('table_params/cup_pos', beg_pos)
             action_num = 0
@@ -311,6 +321,8 @@ class RobotMoveURRobot:
 
                 if action_num > max_action_num:
                     break
+
+            curr_state = str((beg_pos[0], beg_pos[1]))
 
         rospy.loginfo("Robot's turn over")
         rospy.loginfo("Starting human's turn")
@@ -342,6 +354,14 @@ class RobotMoveURRobot:
         self.moveArmTo(x_, y_, z_)
 
     def showStatus(self, _state):
+        m_value = self.query_match_traces().match_traces
+        # rospy.loginfo('Robot move, m_value: %f'%m_value)
+        if m_value < self.threshold_m:
+            return
+
+        self.threshold_confidence = self.query_avg_confidence().confidence
+        rospy.loginfo('Robot move, confidence: %f'%self.threshold_confidence)
+
         if self.SHOW_STATE_MODE == NULL:
             return
         if self.SHOW_STATE_MODE == GESTURING:
@@ -394,15 +414,13 @@ class RobotMoveURRobot:
 
         goal_state = str((dst_pos[0], dst_pos[1]))
 
-        confidence_level = 1.2
-
         result = self.query_action_confidence(curr_state)
 
         # self.moveArmToState(curr_state)
         state_stack.append(curr_state)
         # waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
 
-        while result.confidence <= confidence_level and curr_state != goal_state:
+        while result.confidence <= self.threshold_confidence and curr_state != goal_state:
             curr_state = result.next_state
             # self.moveArmToState(curr_state)
             if curr_state in state_stack:
@@ -515,10 +533,9 @@ class RobotMoveURRobot:
 
         dst_pos = rospy.get_param('table_params/mat_pos')
 
-        curr_state = _state
+        curr_state = copy.deepcopy(_state)
+        start_state = copy.deepcopy(_state)
         goal_state = str((dst_pos[0], dst_pos[1]))
-
-        confidence_level = 1.2
 
         result = self.query_action_confidence(curr_state)
 
@@ -526,27 +543,30 @@ class RobotMoveURRobot:
         confidence_list.append(result.confidence)
         temp_confidence_list.append(result.confidence)
 
-        while result.confidence <= confidence_level and curr_state != goal_state:
-            this_state = result.next_state
-            if this_state in state_stack:
+        # rospy.loginfo("Robot move: %s"%str(result.confidence))
+
+        while result.confidence <= self.threshold_confidence and curr_state != goal_state:
+            curr_state = result.next_state
+            if curr_state in state_stack:
                 break
-            state_stack.append(this_state)
-            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
-            result = self.query_action_confidence(this_state)
+            state_stack.append(curr_state)
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+            result = self.query_action_confidence(curr_state)
             confidence_list.append(result.confidence)
             temp_confidence_list.append(result.confidence)
 
-        state_stack.pop()
-        temp_confidence_list.pop()
+        # state_stack.pop()
+        # temp_confidence_list.pop()
         
-        while len(state_stack) != 0:
-            this_state = state_stack.pop()
-            this_confidence = temp_confidence_list.pop()
-            waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
-            confidence_list.append(this_confidence)
+        # while len(state_stack) != 0:
+        #     this_state = state_stack.pop()
+        #     this_confidence = temp_confidence_list.pop()
+        #     waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))
+        #     confidence_list.append(this_confidence)
 
         if len(waypoints) == 0:
             return
+        waypoints.append(copy.deepcopy(self.stateToRobotPose(start_state)))
 
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
 
@@ -555,8 +575,12 @@ class RobotMoveURRobot:
 
         n_points = len(plan.joint_trajectory.points)
 
+        def sigmoid(_x_array):
+            return 1.0 / (1 + numpy.exp(- _x_array))
+        
+
         # interpolate
-        _y_speed = self.BASE_SPEED_RATIO / numpy.array(confidence_list)
+        _y_speed = 2 * self.BASE_SPEED_RATIO / (sigmoid( numpy.array(confidence_list) - numpy.mean(confidence_list) ) )
         _x_speed = numpy.linspace(0, n_points, len(_y_speed))
         def getSpeedRatio(_i):
             _ratio = numpy.interp(_i, _x_speed, _y_speed)
@@ -632,14 +656,12 @@ class RobotMoveURRobot:
         curr_state = _state
         goal_state = str((dst_pos[0], dst_pos[1]))
 
-        confidence_level = 1.2
-
         result = self.query_action_confidence(curr_state)
         confidence_array.append(result.confidence)
 
         state_stack.append(curr_state)
 
-        while result.confidence <= confidence_level and curr_state != goal_state:
+        while result.confidence <= self.threshold_confidence and curr_state != goal_state:
             this_state = result.next_state
             state_stack.append(this_state)
             # waypoints.append(copy.deepcopy(self.stateToRobotPose(this_state)))

@@ -56,6 +56,13 @@ class QLambdaLearningModel:
         return action
 
     # max 
+    def get_action_max_more(self, state):
+        # take action according to the q function table
+        state_action = self.q_table[state]
+        action = self.arg_max_more(state_action)
+        return action
+
+    # max 
     def get_action_list(self, state):
         # take action according to the q function table
         state_action = self.q_table[state]
@@ -98,6 +105,21 @@ class QLambdaLearningModel:
 
     def reset_eligibility_traces(self):
         self.eligibility_traces = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
+
+    @staticmethod
+    def arg_max_more(state_action):
+        max_index_list = []
+        max_value = state_action[0]
+        for index, value in enumerate(state_action):
+            if value > max_value:
+                max_index_list = []
+                max_value = value
+                max_index_list.append(index)
+            elif value == max_value:
+                max_index_list.append(index)
+        if len(max_index_list) == 4:
+            return -1
+        return random.choice(max_index_list)
 
     @staticmethod
     def arg_max(state_action):

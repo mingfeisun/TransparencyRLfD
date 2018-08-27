@@ -21,8 +21,13 @@ class LearningFromDemo:
         self.model = QLambdaLearningModel([0, 1, 2, 3])
         rospy.Service('update_learning_demo', LearningDemo, self.cb_learning_demo)
         rospy.Service('update_learning', LearningDemo, self.cb_learning)
+
         rospy.Service('query_action', QueryAction, self.cb_queryAction)
         rospy.Service('query_action_confidence', QueryActionConfidence, self.cb_queryActionConfidence)
+
+        rospy.Service('query_match_traces', QueryMatchTraces, self.cb_queryMatchTraces)
+        rospy.Service('query_avg_confidence', QueryAvgConfidence, self.cb_queryAvgconfidence)
+
         rospy.Service('reset_demo', ResetDemoLearning, self.cb_reset)
 
         self.pub = rospy.Publisher('current_state', String, queue_size=1, latch=True)
@@ -30,6 +35,12 @@ class LearningFromDemo:
         self.potential = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
         self.invtemp = 1
+
+        self.match_traces = 0.0
+        self.match_traces_lambda = 0.60
+
+        self.avg_confidence = 0.0
+        self.num_demo = 0
 
     def state_distance(self, _s, _s_demo):
         s = eval(_s)
@@ -77,18 +88,40 @@ class LearningFromDemo:
 
         self.model.learn(s_demo, a_demo, new_reward, ns_demo)
 
-        ## reset eligibility traces, Q(lambda) learning only
-        from teleop_cup_server import REACH_GOAL
-        if r_demo == REACH_GOAL:
-            self.model.reset_eligibility_traces()
-
         return LearningDemoResponse(True)
+
+    def update_match_traces(self, s_demo, a_demo):
+        a_policy = self.model.get_action_max_more(s_demo)
+        if a_policy == a_demo:
+            self.match_traces = self.match_traces_lambda * self.match_traces + 1
+        else:
+            self.match_traces = self.match_traces_lambda * self.match_traces
+        rospy.loginfo('Match traces: %f'%self.match_traces)
+
+    def update_avg_confidence(self, s_demo, a_demo):
+        action_list = self.model.get_action_list(s_demo)
+        confidence = self.calculateConfidence(action_list)
+
+        a_policy = self.model.get_action_max_more(s_demo)
+        if a_policy != a_demo:
+            return
+        
+        self.num_demo += 1
+
+        if self.avg_confidence < confidence:
+            self.avg_confidence = confidence
+        # self.avg_confidence += 1.0/self.num_demo * (confidence - self.avg_confidence) # running average
+
+        rospy.loginfo('Average confidence: %f'%self.avg_confidence)
 
     def cb_learning_demo(self, _req):
         s_demo = _req.state
         a_demo = _req.action
         r_demo = _req.reward
         ns_demo = _req.next_state
+
+        self.update_match_traces(s_demo, a_demo)
+        self.update_avg_confidence(s_demo, a_demo)
 
         msg_state = String(ns_demo)
         self.pub.publish(msg_state)
@@ -101,6 +134,15 @@ class LearningFromDemo:
         new_reward =  r_demo + f_value
 
         self.model.learn(s_demo, a_demo, new_reward, ns_demo)
+
+        ## reset eligibility traces, Q(lambda) learning only
+        from teleop_cup_server import REWARD_GOAL
+        if r_demo == REWARD_GOAL:
+            # rospy.loginfo('Reach goal')
+            self.model.reset_eligibility_traces() # reset eligibility traces
+            self.match_traces = 0 # reset match traces
+            self.avg_confidence = 0 # reset confidence
+
         return LearningDemoResponse(True)
 
     def cb_queryAction_potential(self, _req):
@@ -111,6 +153,12 @@ class LearningFromDemo:
     def cb_queryAction(self, _req):
         action = self.model.get_action(_req.state)
         return QueryActionResponse(action)
+
+    def cb_queryMatchTraces(self, _req):
+        return QueryMatchTracesResponse(self.match_traces)
+
+    def cb_queryAvgconfidence(self, _req):
+        return QueryAvgConfidenceResponse(self.avg_confidence)
 
     def calculateConfidence(self, _action_list):
         temp_prob = numpy.exp(self.invtemp*_action_list) / numpy.sum(numpy.exp(self.invtemp*_action_list))
