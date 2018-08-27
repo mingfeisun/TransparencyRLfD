@@ -129,7 +129,7 @@ class SimpleKeyTeleop():
             self.robot_move.showStatus(next_state)
 
             if reward == REWARD_GOAL:
-                self.robot_move.autoLearn(1)
+                self.robot_move.autoLearn(_rounds=3)
                 self.robot_move.initDemo()
 
     def goalToAction(self, _goal):
