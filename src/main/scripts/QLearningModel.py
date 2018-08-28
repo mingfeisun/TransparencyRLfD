@@ -13,6 +13,8 @@ class QLearningModel:
         self.anneal_decay = 0.0
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
+        self.flush_freq = 0
+
     # update q function with sample <s, a, r, s'>
     def learn(self, state, action, reward, next_state):
         self.epsilon -= self.anneal_decay
@@ -20,7 +22,14 @@ class QLearningModel:
         # using Bellman Optimality Equation to update q function
         new_q = reward + self.discount_lambda * max(self.q_table[next_state])
         self.q_table[state][action] += self.learning_alpha * (new_q - current_q)
-        # self.print_Q_table(state, action, reward, next_state)
+
+        self.flush_freq += 1
+        if self.flush_freq == 20:
+            self.print_Q_table(state, action, reward, next_state)
+            self.flush_freq = 0
+
+    def complete_one_episode(self):
+        pass
 
     # epsilon-greedy policy
     def get_action(self, state):

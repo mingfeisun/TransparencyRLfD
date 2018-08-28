@@ -12,7 +12,7 @@ from CupPoseControl import CupPoseControl
 
 from LearningFromDemo import LearningFromDemo
 
-FAKE_MODE = True
+FAKE_MODE = False
 
 def action2Goal(_action):
     goal = CupMoveGoal()
@@ -51,6 +51,7 @@ if __name__ == "__main__":
     else:
         client = actionlib.SimpleActionClient('teleop_cup_server', CupMoveAction)
         client.wait_for_server()
+        
 
     lfd = LearningFromDemo()
 
@@ -59,6 +60,11 @@ if __name__ == "__main__":
 
     rospy.wait_for_service('query_action')
     client_action = rospy.ServiceProxy('query_action', QueryAction)
+
+    rospy.wait_for_service('reset_demo')
+    client_reset = rospy.ServiceProxy('reset_demo', ResetDemoLearning)
+
+    client_reset(True)
 
     # 0: left, 1: up, 2: right, 3: down
     iteration_num = 200

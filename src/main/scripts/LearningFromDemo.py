@@ -14,11 +14,13 @@ from collections import defaultdict
 from std_msgs.msg import String
 
 class LearningFromDemo:
+    from teleop_cup_server import REWARD_GOAL
+
     def __init__(self):
         # four actions: 0(left), 1(up), 2(right), 3(down)
         # self.model = QLearningModel([0, 1, 2, 3])
-
         self.model = QLambdaLearningModel([0, 1, 2, 3])
+
         rospy.Service('update_learning_demo', LearningDemo, self.cb_learning_demo)
         rospy.Service('update_learning', LearningDemo, self.cb_learning)
 
@@ -56,7 +58,8 @@ class LearningFromDemo:
             for j in range(10):
                 state = str((i, j))
                 pot = self.compute_potential(state, _s_demo)
-                self.potential[state][_a_demo] += pot
+                if self.potential[state][_a_demo] > pot:
+                    self.potential[state][_a_demo] = pot
 
     def get_next_state(self, _state, _action):
         # four actions: 0(left), 1(up), 2(right), 3(down)
@@ -86,7 +89,13 @@ class LearningFromDemo:
         f_value = self.model.discount_lambda * self.potential[ns_demo][na_demo] - self.potential[s_demo][a_demo]
         new_reward =  r_demo + f_value
 
+        # rospy.loginfo("Learning from demonstration: %s, %s, %s, %s"%(str(s_demo), str(a_demo), str(new_reward), str(ns_demo)))
+
         self.model.learn(s_demo, a_demo, new_reward, ns_demo)
+
+        ## complete one episode
+        if r_demo == self.REWARD_GOAL:
+            self.model.complete_one_episode()
 
         return LearningDemoResponse(True)
 
@@ -135,13 +144,12 @@ class LearningFromDemo:
 
         self.model.learn(s_demo, a_demo, new_reward, ns_demo)
 
-        ## reset eligibility traces, Q(lambda) learning only
-        from teleop_cup_server import REWARD_GOAL
-        if r_demo == REWARD_GOAL:
+        ## complete one episode
+        if r_demo == self.REWARD_GOAL:
             # rospy.loginfo('Reach goal')
-            self.model.reset_eligibility_traces() # reset eligibility traces
             self.match_traces = 0 # reset match traces
             self.avg_confidence = 0 # reset confidence
+            self.model.complete_one_episode()
 
         return LearningDemoResponse(True)
 

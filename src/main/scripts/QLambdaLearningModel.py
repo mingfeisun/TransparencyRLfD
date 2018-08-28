@@ -1,4 +1,5 @@
 import numpy
+import rospy
 import random
 from collections import defaultdict
 
@@ -7,13 +8,15 @@ class QLambdaLearningModel:
     def __init__(self, actions):
         # actions = [0, 1, 2, 3]
         self.actions = actions
-        self.learning_alpha = 0.8
-        self.discount_lambda = 0.5
-        self.e_lambda = 0.9
+        self.learning_alpha = 0.5
+        self.discount_lambda = 0.9
+        self.e_lambda = 0.5
         self.epsilon = 0.5
         self.anneal_decay = 0.0
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
         self.eligibility_traces = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
+
+        self.flush_freq = 0
 
     # update q function with sample <s, a, r, s'>
     def learn(self, state, action, reward, next_state):
@@ -23,19 +26,31 @@ class QLambdaLearningModel:
         self.eligibility_traces[state][action] += 1
 
         # using Bellman Optimality Equation to update q function
+        best_action = numpy.argmax(self.q_table[next_state])
         new_q = reward + self.discount_lambda * max(self.q_table[next_state])
 
         delta = new_q - current_q
 
         for i in range(10):
             for j in range(10):
-                state = str((i, j))
-                for action in range(4):
-                    self.q_table[state][action] += self.learning_alpha * delta * self.eligibility_traces[state][action]
-                    self.eligibility_traces[state][action] *= self.discount_lambda * self.e_lambda
+                tmp_state = str((i, j))
+                for tmp_action in range(4):
+                    self.q_table[tmp_state][tmp_action] += self.learning_alpha * delta * self.eligibility_traces[tmp_state][tmp_action]
+                    # rospy.loginfo("q table for state (%s) and action (%s): %f"%(str(tmp_state), str(tmp_action), self.q_table[tmp_state][tmp_action]))
+                    if action == best_action:
+                        self.eligibility_traces[tmp_state][tmp_action] *= self.discount_lambda * self.e_lambda
+                    else:
+                        self.eligibility_traces[tmp_state][tmp_action] = 0
+                    # rospy.loginfo("eligibility traces for state (%s) and action (%s): %f"%(str(tmp_state), str(tmp_action), self.eligibility_traces[tmp_state][tmp_action]))
 
-        self.print_Q_table(state, action, reward, next_state)
-        self.print_eligibility_traces(state, action, reward, next_state)
+        self.flush_freq += 1
+        if self.flush_freq == 20:
+            self.print_Q_table(state, action, reward, next_state)
+            self.print_eligibility_traces(state, action, reward, next_state)
+            self.flush_freq = 0
+
+    def complete_one_episode(self):
+        self.reset_eligibility_traces()
 
     # epsilon-greedy policy
     def get_action(self, state):
