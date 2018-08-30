@@ -44,6 +44,9 @@ class LearningFromDemo:
         self.avg_confidence = 0.0
         self.num_demo = 0
 
+        self.num_itr = 1
+        rospy.loginfo('iterations: %d'%self.num_itr)
+
     def state_distance(self, _s, _s_demo):
         s = eval(_s)
         s_demo = eval(_s_demo)
@@ -96,6 +99,7 @@ class LearningFromDemo:
         ## complete one episode
         if r_demo == self.REWARD_GOAL:
             self.model.complete_one_episode()
+            self.num_itr += 1
 
         return LearningDemoResponse(True)
 
@@ -138,6 +142,7 @@ class LearningFromDemo:
         self.update_potential(s_demo, a_demo)
         self.print_potential(s_demo)
 
+
         na_demo = self.model.get_action_max(ns_demo)
         f_value = self.model.discount_lambda * self.potential[ns_demo][na_demo] - self.potential[s_demo][a_demo]
         new_reward =  r_demo + f_value
@@ -150,6 +155,9 @@ class LearningFromDemo:
             self.match_traces = 0 # reset match traces
             self.avg_confidence = 0 # reset confidence
             self.model.complete_one_episode()
+
+            self.num_itr += 1
+            rospy.loginfo('iterations: %d'%self.num_itr)
 
         return LearningDemoResponse(True)
 
@@ -169,7 +177,9 @@ class LearningFromDemo:
         return QueryAvgConfidenceResponse(self.avg_confidence)
 
     def calculateConfidence(self, _action_list):
-        temp_prob = numpy.exp(self.invtemp*_action_list) / numpy.sum(numpy.exp(self.invtemp*_action_list))
+        self.invtemp = numpy.log10(self.num_itr)
+        action_array = numpy.array(_action_list)
+        temp_prob = numpy.exp(self.invtemp*action_array) / numpy.sum(numpy.exp(self.invtemp*action_array))
         return entropy(temp_prob)
 
     def cb_queryActionConfidence(self, _req):
@@ -189,6 +199,7 @@ class LearningFromDemo:
         return result
 
     def cb_reset(self, _req):
+        self.num_itr = 0
         self.model.reset()
         return ResetDemoLearningResponse(True)
 

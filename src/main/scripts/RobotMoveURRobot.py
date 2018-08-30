@@ -40,9 +40,13 @@ GESTURING = 0
 GESTURING_PAUSING = 1
 GESTURING_SPEED = 2
 
+ADAPTIVE = 3
+SHOW_UNCERTAINTY = 4
+SHOW_POLICY = 5
+
 class RobotMoveURRobot:
     def __init__(self):
-        self.SHOW_STATE_MODE = GESTURING_SPEED
+        self.SHOW_STATE_MODE = ADAPTIVE
 
         self.BASE_SPEED_RATIO = 0.5
 
@@ -70,7 +74,7 @@ class RobotMoveURRobot:
 
             rospy.wait_for_service('query_avg_confidence')
             self.query_avg_confidence = rospy.ServiceProxy('query_avg_confidence', QueryAvgConfidence)
-            self.threshold_confidence = 1.2
+            self.threshold_confidence = 2
 
         self.robot = moveit_commander.RobotCommander()
 
@@ -104,9 +108,13 @@ class RobotMoveURRobot:
         self.table_size = rospy.get_param('table_params/table_size')
         self.margin_size = rospy.get_param('table_params/margin_size')
 
-    def initDemo(self):
+    def initDemo_step1(self):
         self.initCup()
-        self.moveArmToCupTop()
+        self.initRobotPose()
+
+    def initDemo_step2(self):
+        self.initCup()
+        # self.moveArmToCupTop()
 
     def initCup(self):
         # set to init position
@@ -132,6 +140,27 @@ class RobotMoveURRobot:
             JointTrajectoryPoint(positions=Q1, velocities=[0]*6, time_from_start=rospy.Duration(3.0)), 
             JointTrajectoryPoint(positions=Q2, velocities=[0]*6, time_from_start=rospy.Duration(6.0))
             # JointTrajectoryPoint(positions=Q3, velocities=[0]*6, time_from_start=rospy.Duration(6.0))
+        ]
+
+        self.joint_client.send_goal(g)
+        try:
+            self.joint_client.wait_for_result()
+        except KeyboardInterrupt:
+            self.joint_client.cancel_goal()
+    
+    def initRobotPose_tmp(self):
+        JOINT_NAMES = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 
+            'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint']
+
+        Q1 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, -1.541749171284383, 0]
+
+        g = FollowJointTrajectoryGoal()
+
+        g.trajectory = JointTrajectory()
+        g.trajectory.joint_names = JOINT_NAMES
+
+        g.trajectory.points = [
+            JointTrajectoryPoint(positions=Q1, velocities=[0]*6, time_from_start=rospy.Duration(3.0)), 
         ]
 
         self.joint_client.send_goal(g)
@@ -289,7 +318,7 @@ class RobotMoveURRobot:
             rospy.loginfo('Table not configured yet')
             sys.exit(1)
 
-        rospy.loginfo("Autonomous learning")
+        rospy.loginfo("Starting robot's turn")
 
         curr_state = str((beg_pos[0], beg_pos[1]))
         goal_state = str((dst_pos[0], dst_pos[1]))
@@ -301,7 +330,7 @@ class RobotMoveURRobot:
             action_num = 0
 
             while curr_state != goal_state:
-                rospy.loginfo("State: %s"%curr_state)
+                # rospy.loginfo("State: %s"%curr_state)
                 curr_action = self.query_action(curr_state).action
                 curr_goal = action2Goal(curr_action)
 
@@ -353,13 +382,13 @@ class RobotMoveURRobot:
         x_, y_, z_ = self.xyzToRobotPose(x, y, z)
         self.moveArmTo(x_, y_, z_)
 
-    def showStatus(self, _state):
+    def showStatus_obsolete(self, _state):
         m_value = self.query_match_traces().match_traces
         # rospy.loginfo('Robot move, m_value: %f'%m_value)
         if m_value < self.threshold_m:
             return
 
-        self.threshold_confidence = self.query_avg_confidence().confidence
+        # self.threshold_confidence = self.query_avg_confidence().confidence
         rospy.loginfo('Robot move, confidence: %f'%self.threshold_confidence)
 
         if self.SHOW_STATE_MODE == NULL:
@@ -371,8 +400,103 @@ class RobotMoveURRobot:
             self.gesturingPausing(_state)
             return
         if self.SHOW_STATE_MODE == GESTURING_SPEED:
-            self.gesturingAdaptiveSpeed(_state)
+            self.gesturingSpeed(_state)
             return
+
+    def showStatus(self, _state):
+        self.showStatusAdaptive(_state)
+
+    def showUncertainty(self, _state):
+        # 0: left, 1: up, 2: right, 3: down
+        state_stack = []
+        waypoints = []
+
+        dst_pos = rospy.get_param('table_params/mat_pos')
+
+        curr_state = _state
+        goal_state = str((dst_pos[0], dst_pos[1]))
+
+        result = self.query_action_confidence(curr_state)
+        curr_state = result.next_state
+
+        result = self.query_action_confidence(curr_state)
+        state_stack.append(curr_state)
+        waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+
+        max_uncertainty = result.confidence
+        rospy.loginfo('Max uncertainty: %.2f'%max_uncertainty)
+
+        result = self.query_action_confidence(curr_state)
+
+        while result.confidence < max_uncertainty and curr_state != goal_state:
+            curr_state = result.next_state
+            if curr_state in state_stack:
+                break
+            state_stack.append(curr_state)
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+            result = self.query_action_confidence(curr_state)
+            rospy.loginfo('Max uncertainty: %.2f'%result.confidence)
+
+        # waypoints.extend(self.generateCircle(waypoints[-1]))
+        (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+        self.group_man.execute(plan, wait=True)
+
+        self.generateLooking()
+
+    def showPolicy(self, _state):
+        # 0: left, 1: up, 2: right, 3: down
+        state_stack = []
+        waypoints = []
+
+        dst_pos = rospy.get_param('table_params/mat_pos')
+
+        curr_state = _state
+        goal_state = str((dst_pos[0], dst_pos[1]))
+
+        result = self.query_action_confidence(curr_state)
+        curr_state = result.next_state
+
+        result = self.query_action_confidence(curr_state)
+        state_stack.append(curr_state)
+        waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+
+        max_uncertainty = result.confidence
+
+        while curr_state != goal_state:
+            curr_state = result.next_state
+            if curr_state in state_stack:
+                # has a loop
+                break
+            state_stack.append(curr_state)
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+            result = self.query_action_confidence(curr_state)
+
+        waypoints.extend(self.generateCircle(waypoints[-1]))
+
+        (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+        self.group_man.execute(plan, wait=True)
+
+    def showStatusAdaptive(self, _state):
+        m_value = self.query_match_traces().match_traces
+
+        if self.SHOW_STATE_MODE == ADAPTIVE:
+            mode_uncertainty = True
+            mode_policy = True
+
+        if self.SHOW_STATE_MODE == SHOW_UNCERTAINTY:
+            mode_uncertainty = True
+            mode_policy = False
+
+        if self.SHOW_STATE_MODE == SHOW_POLICY:
+            mode_uncertainty = False
+            mode_policy = True
+
+        # rospy.loginfo('Robot move, m_value: %f'%m_value)
+        if m_value < self.threshold_m and mode_uncertainty:
+            self.showUncertainty(_state)
+
+        if m_value >= self.threshold_m and mode_policy:
+            self.showPolicy(_state)
 
     def generateRobotPose(self, _x, _y, _z):
         pose_goal = geometry_msgs.msg.Pose()
@@ -417,7 +541,7 @@ class RobotMoveURRobot:
         result = self.query_action_confidence(curr_state)
 
         # self.moveArmToState(curr_state)
-        state_stack.append(curr_state)
+        # state_stack.append(curr_state)
         # waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
 
         while result.confidence <= self.threshold_confidence and curr_state != goal_state:
@@ -524,7 +648,7 @@ class RobotMoveURRobot:
 
         self.group_man.execute(adaptive_plan, wait=True)
 
-    def gesturingAdaptiveSpeed(self, _state):
+    def gesturingSpeed(self, _state):
         # 0: left, 1: up, 2: right, 3: down
         state_stack = []
         waypoints = []
@@ -577,7 +701,6 @@ class RobotMoveURRobot:
 
         def sigmoid(_x_array):
             return 1.0 / (1 + numpy.exp(- _x_array))
-        
 
         # interpolate
         _y_speed = 2 * self.BASE_SPEED_RATIO / (sigmoid( numpy.array(confidence_list) - numpy.mean(confidence_list) ) )
@@ -606,6 +729,32 @@ class RobotMoveURRobot:
             adaptive_plan.joint_trajectory.points[i].positions = copy.deepcopy(plan.joint_trajectory.points[i].positions)
 
         self.group_man.execute(adaptive_plan, wait=True)
+
+    def adaptiveGesturing(self, _state):
+        pass
+
+    def generateLooking(self):
+        g = self.group_man.get_current_joint_values()
+
+        sway_angles_left_right = numpy.pi/4
+        sway_angles_up = numpy.pi/3
+
+        g1 = copy.deepcopy(g)
+        g2 = copy.deepcopy(g)
+        g3 = copy.deepcopy(g)
+
+        g1[-2] += sway_angles_left_right
+        g1[-3] -= sway_angles_up
+
+        g2[-2] -= sway_angles_left_right
+        g2[-3] -= sway_angles_up
+
+        self.group_man.go(g1, wait=True)
+        self.group_man.go(g2, wait=True)
+        self.group_man.go(g, wait=True)
+
+    def generateReachGoal(self):
+        pass
 
     def generateCircle(self, _center, _radius=0.02):
         center_x = _center.position.x
@@ -697,11 +846,13 @@ if __name__ == "__main__":
     rospy.init_node('robot_move_ur', anonymous=True)
     test = RobotMoveURRobot()
     # test.initRobotPose()
-    test.moveArmToCupTop()
-    waypoints = test.generateUpDown(test.current_pose)
+    # test.moveArmToCupTop()
+    # waypoints = test.generateUpDown(test.current_pose)
 
-    (plan, _) = test.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
-    test.group_man.execute(plan, wait=True)
+    # (plan, _) = test.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+    test.generateLooking()
+
+    # test.group_man.execute(plan, wait=True)
     # test.test_gesturing()
     # test.moveArmToCupTop()
     # test.gesturing('(0, 0)')
