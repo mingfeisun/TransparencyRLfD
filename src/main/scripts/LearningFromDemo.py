@@ -122,8 +122,8 @@ class LearningFromDemo:
         self.num_demo += 1
 
         if self.avg_confidence < confidence:
-            self.avg_confidence = confidence
-        # self.avg_confidence += 1.0/self.num_demo * (confidence - self.avg_confidence) # running average
+            # self.avg_confidence = confidence
+            self.avg_confidence += 1.0/self.num_demo * (confidence - self.avg_confidence) # running average
 
         rospy.loginfo('Average confidence: %f'%self.avg_confidence)
 

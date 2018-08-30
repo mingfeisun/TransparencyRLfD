@@ -412,15 +412,18 @@ class RobotMoveURRobot:
         curr_state = _state
         goal_state = str((dst_pos[0], dst_pos[1]))
         waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+        state_stack.append(curr_state)
 
         result = self.query_action_confidence(curr_state)
         curr_state = result.next_state
         waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
-        max_uncertainty = result.confidence
+        state_stack.append(curr_state)
+
+        max_uncertainty = self.query_avg_confidence().confidence
 
         result = self.query_action_confidence(curr_state)
-
         rospy.loginfo('Max uncertainty: %.2f'%max_uncertainty)
+        rospy.loginfo('Current uncertainty: %.2f'%result.confidence)
 
         while result.confidence < max_uncertainty and curr_state != goal_state:
             curr_state = result.next_state
@@ -429,7 +432,7 @@ class RobotMoveURRobot:
             state_stack.append(curr_state)
             waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
             result = self.query_action_confidence(curr_state)
-            rospy.loginfo('Max uncertainty: %.2f'%result.confidence)
+            rospy.loginfo('Current uncertainty: %.2f'%result.confidence)
 
         # waypoints.extend(self.generateCircle(waypoints[-1]))
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
@@ -452,10 +455,12 @@ class RobotMoveURRobot:
             if curr_state in state_stack:
                 # has a loop
                 break
-            state_stack.append(curr_state)
             waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+            state_stack.append(curr_state)
             result = self.query_action_confidence(curr_state)
             curr_state = result.next_state
+
+        waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
 
         waypoints.extend(self.generateCircle(waypoints[-1]))
 
