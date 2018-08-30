@@ -109,12 +109,11 @@ class RobotMoveURRobot:
         self.margin_size = rospy.get_param('table_params/margin_size')
 
     def initDemo_step1(self):
-        self.initCup()
-        self.initRobotPose()
+        self.initRobotPose_tmp()
 
     def initDemo_step2(self):
         self.initCup()
-        # self.moveArmToCupTop()
+        self.moveArmToCupTop()
 
     def initCup(self):
         # set to init position
@@ -208,11 +207,8 @@ class RobotMoveURRobot:
 
     def moveArmTo(self, _x, _y, _z):
         pose_goal = self.generateRobotPose(_x, _y, _z)
-        self.group_man.clear_pose_targets()
-        self.group_man.set_pose_target(pose_goal)
-        self.group_man.go(wait=True)
-        self.group_man.stop()
-        self.group_man.clear_pose_targets()
+        (plan, _) = self.group_man.compute_cartesian_path([pose_goal], 0.01, 0.0)
+        self.group_man.execute(plan, wait=True)
         self.current_pose = self.group_man.get_current_pose().pose
 
     def test_moveArmTo(self, _pose_goal):
@@ -359,7 +355,7 @@ class RobotMoveURRobot:
     def cupPoseToRobotPose(self, _cup_pose):
         delta_x = _cup_pose.position.x - self.robot_pose.position.x
         delta_y = _cup_pose.position.y - self.robot_pose.position.y
-        delta_z = _cup_pose.position.z - self.robot_pose.position.z + 0.10
+        delta_z = _cup_pose.position.z - self.robot_pose.position.z + 0.12
 
         return delta_x, delta_y, delta_z
 
@@ -736,7 +732,7 @@ class RobotMoveURRobot:
     def generateLooking(self):
         g = self.group_man.get_current_joint_values()
 
-        sway_angles_left_right = numpy.pi/4
+        sway_angles_left_right = numpy.pi/6
         sway_angles_up = numpy.pi/3
 
         g1 = copy.deepcopy(g)
@@ -750,6 +746,7 @@ class RobotMoveURRobot:
         g2[-3] -= sway_angles_up
 
         self.group_man.go(g1, wait=True)
+        # self.group_man.go(g, wait=True)
         self.group_man.go(g2, wait=True)
         self.group_man.go(g, wait=True)
 

@@ -33,9 +33,11 @@
     <arg name="sim" default="true"/>
   </include>
 
+  <!-- 
   <include file="$(find ur10_moveit_config)/launch/moveit_rviz.launch">
     <arg name="config" default="true"/>
   </include>
+  -->
 
   <node name="spawn_table_models" pkg="main" type="spawn_table_models.py"/>
 
