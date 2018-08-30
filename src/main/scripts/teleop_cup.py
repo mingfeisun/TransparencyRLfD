@@ -125,7 +125,7 @@ class SimpleKeyTeleop():
             rospy.set_param('demo_params/human_goal', [self._x, self._y])
 
             r_x, r_y, r_z = self.robot_move.cupPoseToRobotPose(result.cup_pose)
-            self.robot_move.moveArmTo(r_x, r_y, r_z)
+            # self.robot_move.moveArmTo(r_x, r_y, r_z)
             self.robot_move.showStatus(next_state)
 
             if reward == REWARD_GOAL:

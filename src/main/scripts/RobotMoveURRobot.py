@@ -411,18 +411,16 @@ class RobotMoveURRobot:
 
         curr_state = _state
         goal_state = str((dst_pos[0], dst_pos[1]))
+        waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
 
         result = self.query_action_confidence(curr_state)
         curr_state = result.next_state
-
-        result = self.query_action_confidence(curr_state)
-        state_stack.append(curr_state)
         waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
-
         max_uncertainty = result.confidence
-        rospy.loginfo('Max uncertainty: %.2f'%max_uncertainty)
 
         result = self.query_action_confidence(curr_state)
+
+        rospy.loginfo('Max uncertainty: %.2f'%max_uncertainty)
 
         while result.confidence < max_uncertainty and curr_state != goal_state:
             curr_state = result.next_state
@@ -435,6 +433,7 @@ class RobotMoveURRobot:
 
         # waypoints.extend(self.generateCircle(waypoints[-1]))
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+
         self.group_man.execute(plan, wait=True)
 
         self.generateLooking()
@@ -449,23 +448,14 @@ class RobotMoveURRobot:
         curr_state = _state
         goal_state = str((dst_pos[0], dst_pos[1]))
 
-        result = self.query_action_confidence(curr_state)
-        curr_state = result.next_state
-
-        result = self.query_action_confidence(curr_state)
-        state_stack.append(curr_state)
-        waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
-
-        max_uncertainty = result.confidence
-
         while curr_state != goal_state:
-            curr_state = result.next_state
             if curr_state in state_stack:
                 # has a loop
                 break
             state_stack.append(curr_state)
             waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
             result = self.query_action_confidence(curr_state)
+            curr_state = result.next_state
 
         waypoints.extend(self.generateCircle(waypoints[-1]))
 
