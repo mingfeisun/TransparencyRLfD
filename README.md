@@ -56,8 +56,8 @@ To-do list:
 ### 3. Learning process evaluation (Jul 15th)
 
 **Q-learning**:
-* Q function update (update for current state and action only)
-* Predicted action vs. human input action
+* ~~Q function update (update for current state and action only)~~
+* ~~Predicted action vs. human input action~~
 
 ### 4. Motion planning (Jul 25th)
 * Testing on PR2 robot: robot right arm follows cup movement: (speed: x10)
@@ -70,17 +70,20 @@ To-do list:
 ## To-do lists
 
 1. ~~Need to find out the possible robot motions that would affect the human perception~~
-2. Need to implement the related motions
+2. ~~Need to implement the related motions~~
 * ~~Gesturing motions: policy-based~~
 <img src="docs/arm-gesturing-x2.gif" alt="drawing" width="600px"/>
 
 * ~~Pausing motions: state-uncertainty-based~~
 <img src="docs/arm-pausing-x2.gif" alt="drawing" width="600px"/>
 
-3. Need to determine the learning model and evaluate the model effects towards the learning
+3. ~~Need to determine the learning model and evaluate the model effects towards the learning~~
 
 # Expected outcome
 ![](docs/doing-showing.png)
+
+# Final outcome
+![](docs/adaptive-gesturing.png)
 
 # Misc
 
