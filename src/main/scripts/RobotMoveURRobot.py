@@ -92,15 +92,17 @@ class RobotMoveURRobot:
         self.joint_client = actionlib.SimpleActionClient('arm_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
         self.joint_client.wait_for_server()
 
-        self.orien_x = 0.00709209889026
-        self.orien_y = 0.731524912106
-        self.orien_z = 0.0131916335966
-        self.orien_w = 0.681650193211
+        self.orien_x = 0.004
+        self.orien_y = 0.710
+        self.orien_z = 0.003
+        self.orien_w = 0.704
 
         self.robot_pose = Pose() 
         self.robot_pose.position.x = -0.75 
         self.robot_pose.position.y = 0.0
         self.robot_pose.position.z = 0.8
+
+        self.shifted_height = 0.2
 
         self.addCollision()
 
@@ -124,8 +126,8 @@ class RobotMoveURRobot:
             'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint']
 
         # [144.593816163399, 5.754934304529601, 7.194142435155028, 10.61821127013265, 4.675844406769917, 7.934736338099062]
-        Q1 = [0.009653124896662924, -0.6835756311532828, 1.0619281313412259, -0.3737989105267019, 0.009994925707914604, 0]
-        Q2 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, -1.541749171284383, 0]
+        Q1 = [0.009653124896662924, -0.6835756311532828, 1.0619281313412259, -0.3737989105267019, 0, 0]
+        Q2 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -2.05, -1.57, 0]
         # Q3 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, 4.681749171284383, 1.8825401280344316]
         # Q2 = [1.5,0,-1.57,0,0,0]
         # Q3 = [1.5,-0.2,-1.57,0,0,0]
@@ -151,7 +153,7 @@ class RobotMoveURRobot:
         JOINT_NAMES = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 
             'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint']
 
-        Q1 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -1.9876127002995183, -1.541749171284383, 0]
+        Q1 = [0.009653124896662924, -0.6835756311532828, 1.170799852990027, -2.05, -1.57, 0]
 
         g = FollowJointTrajectoryGoal()
 
@@ -356,14 +358,14 @@ class RobotMoveURRobot:
     def cupPoseToRobotPose(self, _cup_pose):
         delta_x = _cup_pose.position.x - self.robot_pose.position.x
         delta_y = _cup_pose.position.y - self.robot_pose.position.y
-        delta_z = _cup_pose.position.z - self.robot_pose.position.z + 0.12
+        delta_z = _cup_pose.position.z - self.robot_pose.position.z + self.shifted_height
 
         return delta_x, delta_y, delta_z
 
     def xyzToRobotPose(self, _x, _y, _z):
         delta_x = _x - self.robot_pose.position.x
         delta_y = _y - self.robot_pose.position.y
-        delta_z = _z - self.robot_pose.position.z + 0.10
+        delta_z = _z - self.robot_pose.position.z + self.shifted_height
 
         return delta_x, delta_y, delta_z
     
@@ -841,12 +843,12 @@ if __name__ == "__main__":
     # for testing
     rospy.init_node('robot_move_ur', anonymous=True)
     test = RobotMoveURRobot()
-    # test.initRobotPose()
+    test.initRobotPose()
     # test.moveArmToCupTop()
     # waypoints = test.generateUpDown(test.current_pose)
 
     # (plan, _) = test.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
-    test.generateLooking()
+    # test.generateLooking()
 
     # test.group_man.execute(plan, wait=True)
     # test.test_gesturing()
