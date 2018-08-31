@@ -87,7 +87,7 @@ def cb_moveCup(_req):
         action_res.state_y = pre_j
         action_res.distance_to_go = 0 # need to define
         action_res.cup_pose = cupPoseCtrl.getPose()
-        rospy.loginfo('Collision detected')
+        # rospy.loginfo('Collision detected')
         server.set_aborted(action_res, 'Collision detected')
         return
 
@@ -98,7 +98,7 @@ def cb_moveCup(_req):
     target_pose.position.y = y
     target_pose.position.z = z
 
-    rospy.loginfo('OK to go')
+    # rospy.loginfo('OK to go')
 
     action_res.complete_status = True
     action_res.state_x = target_i
@@ -110,13 +110,13 @@ def cb_moveCup(_req):
     if check_result == REACH_GOAL:
         action_res.reward = REWARD_GOAL
         action_res.distance_to_go = 0
-        rospy.loginfo('Mission completed')
+        # rospy.loginfo('Mission completed')
         server.set_preempted(action_res, 'Mission completed')
 
     if check_result == OK_TO_GO:
         action_res.reward = REWARD_MOVE
         action_res.distance_to_go = 0 # need to define
-        rospy.loginfo('Moveing one step')
+        # rospy.loginfo('Moveing one step')
         server.set_succeeded(action_res, 'Moving one step')
 
 

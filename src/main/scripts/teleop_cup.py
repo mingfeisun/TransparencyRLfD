@@ -28,12 +28,14 @@ class SimpleKeyTeleop():
     def __init__(self):
         self._hz = 50
 
-        self._forward_rate = 0.8
-        self._backward_rate = 0.5
-        self._rotation_rate = 1.0
         self._last_pressed = {}
         self._x = 0
         self._y = 0
+
+        self._flag_listening = True
+
+        self._buffer_size = 50
+        self._key_buffer = []
 
         self._lock = Lock()
 
@@ -50,7 +52,6 @@ class SimpleKeyTeleop():
         self.reset_demo = rospy.ServiceProxy('reset_demo', LearningDemo)
 
         rospy.loginfo('Connect to teleop_cup server: finished')
-
 
     movement_bindings = {
         curses.KEY_UP:    (-1,  0),
@@ -74,9 +75,9 @@ class SimpleKeyTeleop():
         self._pub_cmd = rospy.Subscriber('key_input', Int16, self.cb_key_in)
 
     def run(self):
-        while not rospy.is_shutdown():
-            self._set_x_y()
-            self._send_goal()
+        while self._flag_listening:
+            if self._set_x_y():
+                self._send_goal()
 
     def cb_key_in(self, _feedback):
         if self._lock.acquire():
@@ -88,59 +89,72 @@ class SimpleKeyTeleop():
 
     def _set_x_y(self):
         now = rospy.get_time()
-        keys = []
+
+        flag_changed = False
 
         if self._lock.acquire(): # lock to avoid modifying _last_pressed
-            for a in self._last_pressed:
-                if now - self._last_pressed[a] < 0.4:
-                    keys.append(a)
+            # for a in self._last_pressed:
+            #     if now - self._last_pressed[a] < 0.4:
+            #         keys.append(a)
+            # self._lock.release()
+
+            if len(self._key_buffer) != 0:
+                first_pair = self._key_buffer.pop(0)
+                key = first_pair["keycode"]
+
+                x = 0.0
+                y = 0.0
+                l, a = self.movement_bindings[key]
+                x += l
+                y += a
+
+                self._x = x
+                self._y = y
+
+                flag_changed = True
+
             self._lock.release()
 
-        x = 0.0
-        y = 0.0
-        for k in keys:
-            l, a = self.movement_bindings[k]
-            x += l
-            y += a
-        self._x = x
-        self._y = y
-
+        return flag_changed
 
     def _key_pressed(self, keycode):
         if keycode == ord('q'):
-            rospy.signal_shutdown('Shutting down. See you later')
+            self._flag_listening = False
+            # rospy.signal_shutdown('Shutting down. See you later')
         elif keycode in self.movement_bindings:
-            self._last_pressed[keycode] = rospy.get_time()
+            # self._last_pressed[keycode] = rospy.get_time()
+            if len(self._key_buffer) > self._buffer_size:
+                self._key_buffer.pop(0)
+            self._key_buffer.append({"keycode": keycode, "timestamp": rospy.get_time() })
 
     def _send_goal(self):
+        self.goal.x = self._x
+        self.goal.y = self._y
+        self.goal.time_factor = 1
 
-        if self._x != 0 or self._y != 0:
-            self.goal.x = self._x
-            self.goal.y = self._y
-            self.goal.time_factor = 1
+        state = self.getState()
+        self.client.send_goal(self.goal)
 
-            state = self.getState()
-            self.client.send_goal(self.goal)
+        self.client.wait_for_result()
 
-            self.client.wait_for_result()
+        result = self.client.get_result()
 
-            result = self.client.get_result()
+        reward = result.reward
+        action = self.goalToAction(self.goal)
+        next_state = self.getState()
 
-            reward = result.reward
-            action = self.goalToAction(self.goal)
-            next_state = self.getState()
+        self.update_learning(state, action, reward, next_state)
+        rospy.set_param('demo_params/human_goal', [self._x, self._y])
 
-            self.update_learning(state, action, reward, next_state)
-            rospy.set_param('demo_params/human_goal', [self._x, self._y])
+        # r_x, r_y, r_z = self.robot_move.cupPoseToRobotPose(result.cup_pose)
+        # self.robot_move.moveArmTo(r_x, r_y, r_z)
 
-            r_x, r_y, r_z = self.robot_move.cupPoseToRobotPose(result.cup_pose)
-            # self.robot_move.moveArmTo(r_x, r_y, r_z)
+        if reward != REWARD_GOAL:
             self.robot_move.showStatus(next_state)
-
-            if reward == REWARD_GOAL:
-                self.robot_move.initDemo_step1()
-                self.robot_move.autoLearn(_rounds=10)
-                self.robot_move.initDemo_step2()
+        else:
+            self.robot_move.initDemo_step1()
+            self.robot_move.autoLearn(_rounds=10)
+            self.robot_move.initDemo_step2()
 
     def goalToAction(self, _goal):
         if _goal.x == 0 and _goal.y == -1:
