@@ -3,7 +3,7 @@
   <world name="demo">
     <gui> 
         <camera name="camera">
-            <pose>3.0 0 2 0 0.2618 3.14</pose>
+            <pose>0 1.6 2.1 0 0.6 -1.57</pose>
         </camera>
     </gui>
 
@@ -74,11 +74,13 @@
         </collision>
 
         <visual name="visual">
+          <transparency>0</transparency>
           <geometry>
             <mesh>
               <uri>model://cafe_table/meshes/cafe_table.dae</uri>
             </mesh>
           </geometry>
+          <material><script><name>Gazebo/Grey</name></script></material>
         </visual>
 
         <visual name="surface_side1_visual">
@@ -253,10 +255,48 @@
             <kinematic>0</kinematic>
             <gravity>1</gravity>
         </link>
-        <pose>-4 0 0 0 -0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
     </model>
 
+    <!-- blue point light -->
+    <!--
+    <light type="point" name="spot">
+      <pose>0 0 0 0 0 0</pose>
+      <diffuse>0 0 1 1</diffuse>
+      <specular>.1 .1 .1 1</specular>
+      <attenuation>
+        <range>1</range>
+        <linear>0.2</linear>
+        <constant>0.8</constant>
+        <quadratic>0.01</quadratic>
+      </attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+    -->
+
+    <!-- green spot light -->
+    <light type="spot" name="spot">
+      <pose>0 0 0 0 0 0</pose>
+      <diffuse>1 0 0 1</diffuse>
+      <specular>.2 .2 .2 1</specular>
+      <attenuation>
+        <range>2</range>
+        <linear>0.01</linear>
+        <constant>0.1</constant>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <spot>
+        <inner_angle>0.02</inner_angle>
+        <outer_angle>0.05</outer_angle>
+        <falloff>1</falloff>
+      </spot>
+      <cast_shadows>true</cast_shadows>
+    </light>
+
     <include><uri>model://sun</uri></include>
+    <!--
+    -->
     <include><uri>model://ground_plane</uri></include>
   </world>
 </sdf>
