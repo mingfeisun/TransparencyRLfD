@@ -145,7 +145,6 @@ class SimpleKeyTeleop():
         else:
             self.robot_move.initDemo_step1()
             self.robot_move.autoLearn(_rounds=10)
-            self.cupCtrl.changeDefaultPoseToNext()
             self.robot_move.initDemo_step2()
 
     def goalToAction(self, _goal):

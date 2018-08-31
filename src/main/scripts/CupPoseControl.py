@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import copy
 import rospy
 import actionlib
 
@@ -14,32 +15,63 @@ class CupPoseControl:
         
         rospy.wait_for_service('/gazebo/get_model_state')
         self.model_state_client = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+        self.idx_current_pos = 0
 
-    def setPose(self, _pose):
-        model_info = ModelState()
-        model_info.model_name = 'cup'
-        model_info.reference_frame = 'world'
-        model_info.pose = _pose
-        self.pub.publish(model_info)
+    def setPose(self, _pose_cup):
+        model_info_cup = ModelState()
+        model_info_cup.model_name = 'cup'
+        model_info_cup.reference_frame = 'world'
+        model_info_cup.pose = _pose_cup
+        self.pub.publish(model_info_cup)
 
     def setPoseDefault(self):
-        pre_index = rospy.get_param('table_params/cup_pos_init')
-        rospy.set_param('table_params/cup_pos', pre_index)
+        self.list_cup_pos = rospy.get_param('table_params/list_cup_pos')
+        cup_index = self.list_cup_pos[self.idx_current_pos]
+
+        # rospy.loginfo('Current index: %s'%str(self.idx_current_pos))
+        # rospy.loginfo('Current cup position: %s'%str(pre_index))
+
+        rospy.set_param('table_params/cup_pos', cup_index)
         grid_size = rospy.get_param('table_params/grid_size')
         table_size = rospy.get_param('table_params/table_size')
         margin_size = rospy.get_param('table_params/margin_size')
-        x, y, z = getXYZFromIJ(pre_index[0], pre_index[1], grid_size, table_size, margin_size)
+        x, y, z = getXYZFromIJ(cup_index[0], cup_index[1], grid_size, table_size, margin_size)
 
-        target_pose = Pose()
-        target_pose.position.x = x
-        target_pose.position.y = y
-        target_pose.position.z = z
-        self.setPose(target_pose)
+        target_pose_cup = Pose()
+        target_pose_cup.position.x = x
+        target_pose_cup.position.y = y
+        target_pose_cup.position.z = z
+
+        mat_index = rospy.get_param('table_params/mat_pos')
+        x, y, z = getXYZFromIJ(mat_index[0], mat_index[1], grid_size, table_size, margin_size)
+        target_pose_mat = Pose()
+        target_pose_mat.position.x = x
+        target_pose_mat.position.y = y
+        target_pose_mat.position.z = z
+
+        model_info_mat = ModelState()
+        model_info_mat.model_name = 'mat'
+        model_info_mat.reference_frame = 'world'
+        model_info_mat.pose = target_pose_mat
+        self.pub.publish(model_info_mat)
+
+        self.setPose(target_pose_cup)
+
+    def changeDefaultPose(self, _new_pose):
+        rospy.set_param('table_params/cup_pos_init', _new_pose)
+
+    def changeDefaultPoseToNext(self):
+        self.list_cup_pos = rospy.get_param('table_params/list_cup_pos')
+        num_pos = len(self.list_cup_pos)
+        self.idx_current_pos += 1
+        if self.idx_current_pos > num_pos - 1:
+            self.idx_current_pos = self.idx_current_pos % num_pos
+        self.changeDefaultPose(self.list_cup_pos[self.idx_current_pos])
+        return num_pos - 1 - self.idx_current_pos
 
     def getPose(self):
         cup_pose = self.model_state_client('cup', "").pose
         return cup_pose
-
 
 if __name__ == "__main__":
     rospy.init_node('test')
