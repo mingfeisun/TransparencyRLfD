@@ -102,14 +102,15 @@ def main_key_in(stdscr):
 
         if keycode == -1:
             continue
-
-        if keycode == ord('q'):
-            rospy.signal_shutdown('Shutting down. See you later')
-
         keycode_msg = Int16()
         keycode_msg.data = keycode
 
         saved_bag.write('key_input', keycode_msg)
+
+        if keycode == ord('q'):
+            saved_bag.close()
+            rospy.signal_shutdown('Shutting down. See you later')
+            break
 
         wnd.clear()
         output_str = ""

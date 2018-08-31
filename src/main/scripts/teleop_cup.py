@@ -79,17 +79,23 @@ class SimpleKeyTeleop():
             self._send_goal()
 
     def cb_key_in(self, _feedback):
-        if self._lock.acquire(False):
+        if self._lock.acquire():
             keycode = _feedback.data
+            if keycode == -1:
+                return
             self._key_pressed(keycode)
             self._lock.release()
 
     def _set_x_y(self):
         now = rospy.get_time()
         keys = []
-        for a in self._last_pressed:
-            if now - self._last_pressed[a] < 0.4:
-                keys.append(a)
+
+        if self._lock.acquire(): # lock to avoid modifying _last_pressed
+            for a in self._last_pressed:
+                if now - self._last_pressed[a] < 0.4:
+                    keys.append(a)
+            self._lock.release()
+
         x = 0.0
         y = 0.0
         for k in keys:
@@ -98,6 +104,7 @@ class SimpleKeyTeleop():
             y += a
         self._x = x
         self._y = y
+
 
     def _key_pressed(self, keycode):
         if keycode == ord('q'):
