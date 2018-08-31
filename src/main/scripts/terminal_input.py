@@ -20,10 +20,14 @@ class TextWindow():
         curses.curs_set(0)
 
         self._num_lines = lines
+        self.valid_key_codes = [ord('q'), curses.KEY_RIGHT, curses.KEY_LEFT, curses.KEY_DOWN, curses.KEY_DOWN]
 
     def pub_key(self):
         keycode_ch = self._screen.getch()
-        keycode = keycode_ch if keycode_ch != -1 else -1
+        if keycode_ch in self.valid_key_codes:
+            keycode = keycode_ch
+        else:
+            keycode = -1
 
         if keycode != -1:
             keycode_msg = Int16()
@@ -96,6 +100,7 @@ def main_key_in(stdscr):
     wnd.write_line(2, 'Hello')
     wnd.write_line(5, 'Use arrow keys to move, q to exit.')
     wnd.refresh()
+
 
     while not rospy.is_shutdown():
         keycode = wnd.pub_key()
