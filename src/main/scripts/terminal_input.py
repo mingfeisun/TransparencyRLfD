@@ -4,7 +4,7 @@ import curses
 import rospy
 import rosbag
 
-from std_msgs.msg import Int16
+from std_msgs.msg import Int16, String
 from time import gmtime, strftime
 
 # adapted from https://github.com/ros-teleop/teleop_tools/blob/melodic-devel/key_teleop/scripts/key_teleop.py
@@ -20,7 +20,7 @@ class TextWindow():
         curses.curs_set(0)
 
         self._num_lines = lines
-        self.valid_key_codes = [ord('q'), curses.KEY_RIGHT, curses.KEY_LEFT, curses.KEY_DOWN, curses.KEY_DOWN]
+        self.valid_key_codes = [ord('q'), ord('y'), curses.KEY_RIGHT, curses.KEY_LEFT, curses.KEY_DOWN, curses.KEY_UP]
 
     def pub_key(self):
         keycode_ch = self._screen.getch()
@@ -86,27 +86,37 @@ def main_key_in(stdscr):
     prefix = 'bag'
     if not os.path.exists(prefix):
         os.mkdir(prefix)
-    bag_filename = os.path.join(prefix, "%s.bag"%timestamp)
+    bag_filename = os.path.join(prefix, "%s-%s.bag"%(rospy.get_param('username'), timestamp))
     saved_bag = rosbag.Bag(bag_filename, 'w')
 
-    ## def bagClose():
-    ##     saved_bag.reindex()
-    ##     saved_bag.close()
-    ##     rospy.loginfo('Done')
-
-    ## rospy.on_shutdown(bagClose)
-
     wnd.clear()
-    wnd.write_line(2, 'Hello')
+    wnd.write_line(2, 'Hello %s'%rospy.get_param('username'))
     wnd.write_line(5, 'Use arrow keys to move, q to exit.')
     wnd.refresh()
 
+    flag_waiting_keys = False
 
     while not rospy.is_shutdown():
+        if rospy.get_param('current_status') == "training":
+            wnd.clear()
+            wnd.write_line(5, 'The robot is now learning from your demonstration.')
+            wnd.write_line(6, 'Please wait for a while...')
+            wnd.refresh()
+            flag_waiting_keys = True
+            continue
+
+        if flag_waiting_keys:
+            wnd.clear()
+            wnd.write_line(2, 'Please input keys...')
+            wnd.write_line(5, 'Use arrow keys to move, q to exit.')
+            wnd.refresh()
+            flag_waiting_keys = False
+
         keycode = wnd.pub_key()
 
         if keycode == -1:
             continue
+
         keycode_msg = Int16()
         keycode_msg.data = keycode
 
@@ -130,10 +140,13 @@ def main_key_in(stdscr):
 
         if len(output_str) != 0:
             wnd.write_line(2, 'Moving %s' %output_str)
-        wnd.write_line(5, 'Use arrow keys to move, q to exit.')
+        if rospy.get_param('current_status') == "listening":
+            wnd.write_line(5, 'Use arrow keys to move.')
+            wnd.write_line(6, "1) Use 'q' to exit.")
+            wnd.write_line(7, "2) Use 'y' to go to next demonstration.")
         wnd.refresh()
 
-    # rospy.loginfo('Done')
+    rospy.loginfo('Done')
 
 if __name__ == "__main__":
     # import time
@@ -143,5 +156,10 @@ if __name__ == "__main__":
     # file_name = datetime.datetime.fromtimestamp(tmp).strftime('%Y-%m-%d-%H-%M-%S')
     # bag = rosbag.Bag("%s.bag"%file_name, "w")
     rospy.init_node('terminal_input', anonymous=True)
+    test_pub = rospy.Publisher('status_code_test', Int16, queue_size=10)
+
+    print "Input your name:"
+    username = raw_input()
+    rospy.set_param('username', username)
     curses.wrapper(main_key_in)
     # curses.wrapper(main_rosbag)

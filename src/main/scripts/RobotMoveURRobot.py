@@ -413,7 +413,7 @@ class RobotMoveURRobot:
         waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
         state_stack.append(curr_state)
 
-        waypoints.extend(self.generateCircle(waypoints[-1], _radius=0.01))
+        # waypoints.extend(self.generateCircle(waypoints[-1], _radius=0.01))
 
         result = self.query_action_confidence(curr_state)
         curr_state = result.next_state

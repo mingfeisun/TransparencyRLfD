@@ -44,10 +44,8 @@ class QLambdaLearningModel:
                     # rospy.loginfo("eligibility traces for state (%s) and action (%s): %f"%(str(tmp_state), str(tmp_action), self.eligibility_traces[tmp_state][tmp_action]))
 
         self.flush_freq += 1
-        if self.flush_freq == 20:
-            self.print_Q_table(state, action, reward, next_state)
-            self.print_eligibility_traces(state, action, reward, next_state)
-            self.flush_freq = 0
+        self.print_Q_table(state, action, reward, next_state)
+        self.print_eligibility_traces(state, action, reward, next_state)
 
     def complete_one_episode(self):
         self.reset_eligibility_traces()
@@ -89,7 +87,7 @@ class QLambdaLearningModel:
 
     # vis: 0(left), 1(up), 2(right), 3(down)
     def print_Q_table(self, _curr_state, _action, _reward, _next_state):
-        with open('log/q_table_value.txt', 'w') as fout:
+        with open('log/%s-q_table_value-%d.txt'%(rospy.get_param('username'), self.flush_freq), 'w') as fout:
             fout.write("State \t Left \t Up \t Right \t Down \n")
             for i in range(10):
                 for j in range(10):
@@ -103,7 +101,7 @@ class QLambdaLearningModel:
 
     # vis: 0(left), 1(up), 2(right), 3(down)
     def print_eligibility_traces(self, _curr_state, _action, _reward, _next_state):
-        with open('log/eligibility_traces.txt', 'w') as fout:
+        with open('log/%s-eligibility_traces-%d.txt'%(rospy.get_param('username'), self.flush_freq), 'w') as fout:
             fout.write("State \t Left \t Up \t Right \t Down \n")
             for i in range(10):
                 for j in range(10):

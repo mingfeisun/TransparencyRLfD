@@ -204,7 +204,7 @@ class LearningFromDemo:
         return ResetDemoLearningResponse(True)
 
     def print_potential(self, _curr_state):
-        with open('log/q_potential_value.txt', 'w') as fout:
+        with open('log/%s-q_potential_value.txt'%rospy.get_param('username'), 'w') as fout:
             fout.write("State \t Left \t Up \t Right \t Down \n")
             for i in range(10):
                 for j in range(10):
