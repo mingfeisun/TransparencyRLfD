@@ -80,10 +80,10 @@ To-do list:
 3. ~~Need to determine the learning model and evaluate the model effects towards the learning~~
 
 ## Expected outcome
-![](docs/doing-showing.png)
+<img src="docs/doing-showing.png" alt="drawing" width="600px"/>
 
 ## Final outcome
-![](docs/adaptive-gesturing.gif)
+<img src="docs/adaptive-gesturing.gif" alt="drawing" width="600px"/>
 
 ## Related source code
 [Matlab Reinforcement Learning](https://github.com/mingfeisun/matlab-reinforcement-learning)
