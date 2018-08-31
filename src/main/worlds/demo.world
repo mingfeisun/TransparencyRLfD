@@ -288,7 +288,7 @@
       <direction>0 0 -1</direction>
       <spot>
         <inner_angle>0.02</inner_angle>
-        <outer_angle>0.2</outer_angle>
+        <outer_angle>0.15</outer_angle>
         <falloff>1</falloff>
       </spot>
       <cast_shadows>true</cast_shadows>

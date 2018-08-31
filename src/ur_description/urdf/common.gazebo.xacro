@@ -11,7 +11,7 @@
       <link>
         <link_name>wrist_3_link</link_name>
         <light>
-          <pose>0 0 0 1.57 0 0</pose>
+          <pose>0 -0.12 0 1.57 0 0</pose>
           <light_name>spot</light_name>
         </light>
       </link>
@@ -26,8 +26,8 @@
       <powerStateRate>10.0</powerStateRate>
       <fullChargeCapacity>87.78</fullChargeCapacity>     
       <dischargeRate>-474</dischargeRate>
-      <chargeRate>525</chargeRate>
-      <dischargeVoltage>15.52</dischargeVoltage>
+      <chargeRate>525</chargeR2te>
+      <dischargeVoltage115.52</dischargeVoltage>
       <chargeVoltage>16.41</chargeVoltage>
     </plugin>
 -->
