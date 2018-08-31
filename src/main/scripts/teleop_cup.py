@@ -32,8 +32,6 @@ class SimpleKeyTeleop():
         self._x = 0
         self._y = 0
 
-        self._flag_listening = True
-
         self._buffer_size = 50
         self._key_buffer = []
 
@@ -54,10 +52,10 @@ class SimpleKeyTeleop():
         rospy.loginfo('Connect to teleop_cup server: finished')
 
     movement_bindings = {
-        curses.KEY_UP:    (-1,  0),
-        curses.KEY_DOWN:  ( 1,  0),
-        curses.KEY_LEFT:  ( 0, -1),
-        curses.KEY_RIGHT: ( 0,  1),
+        curses.KEY_RIGHT:   (-1,  0),
+        curses.KEY_LEFT:    ( 1,  0),
+        curses.KEY_UP:      ( 0, -1),
+        curses.KEY_DOWN:    ( 0,  1),
     }
 
     def init(self):
@@ -75,8 +73,10 @@ class SimpleKeyTeleop():
         self._pub_cmd = rospy.Subscriber('key_input', Int16, self.cb_key_in)
 
     def run(self):
-        while self._flag_listening:
-            if self._set_x_y():
+        running_code = 0
+        while running_code != -1:
+            running_code = self._set_x_y()
+            if running_code == 1:
                 self._send_goal()
 
     def cb_key_in(self, _feedback):
@@ -89,43 +89,34 @@ class SimpleKeyTeleop():
 
     def _set_x_y(self):
         now = rospy.get_time()
-
         flag_changed = False
-
         if self._lock.acquire(): # lock to avoid modifying _last_pressed
             # for a in self._last_pressed:
             #     if now - self._last_pressed[a] < 0.4:
             #         keys.append(a)
             # self._lock.release()
-
             if len(self._key_buffer) != 0:
                 first_pair = self._key_buffer.pop(0)
                 key = first_pair["keycode"]
-
+                if key == ord('q'):
+                    self._lock.release()
+                    return -1
                 x = 0.0
                 y = 0.0
                 l, a = self.movement_bindings[key]
                 x += l
                 y += a
-
                 self._x = x
                 self._y = y
-
-                flag_changed = True
-
+                self._lock.release()
+                return 1
             self._lock.release()
-
-        return flag_changed
+        return 0
 
     def _key_pressed(self, keycode):
-        if keycode == ord('q'):
-            self._flag_listening = False
-            # rospy.signal_shutdown('Shutting down. See you later')
-        elif keycode in self.movement_bindings:
-            # self._last_pressed[keycode] = rospy.get_time()
-            if len(self._key_buffer) > self._buffer_size:
-                self._key_buffer.pop(0)
-            self._key_buffer.append({"keycode": keycode, "timestamp": rospy.get_time() })
+        if len(self._key_buffer) > self._buffer_size:
+            self._key_buffer.pop(0)
+        self._key_buffer.append({"keycode": keycode, "timestamp": rospy.get_time() })
 
     def _send_goal(self):
         self.goal.x = self._x
@@ -154,6 +145,7 @@ class SimpleKeyTeleop():
         else:
             self.robot_move.initDemo_step1()
             self.robot_move.autoLearn(_rounds=10)
+            self.cupCtrl.changeDefaultPoseToNext()
             self.robot_move.initDemo_step2()
 
     def goalToAction(self, _goal):

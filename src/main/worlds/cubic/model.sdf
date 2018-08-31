@@ -36,7 +36,7 @@
         <geometry>
           <box><size>0.080 0.080 0.040</size></box>
         </geometry>
-        <material><script><name>Gazebo/Green</name></script></material>
+        <material><script><name>Gazebo/DarkGrey</name></script></material>
       </visual>
     </link>
   </model>
