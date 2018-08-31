@@ -88,7 +88,6 @@ class RobotMoveURRobot:
                                                        queue_size=20)
         self.current_pose = self.group_man.get_current_pose().pose
 
-
         self.joint_client = actionlib.SimpleActionClient('arm_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
         self.joint_client.wait_for_server()
 
@@ -102,7 +101,7 @@ class RobotMoveURRobot:
         self.robot_pose.position.y = 0.0
         self.robot_pose.position.z = 0.8
 
-        self.shifted_height = 0.2
+        self.shifted_height = 0.15
 
         self.addCollision()
 
@@ -114,12 +113,9 @@ class RobotMoveURRobot:
         self.initRobotPose_tmp()
 
     def initDemo_step2(self):
-        self.initCup()
-        self.moveArmToCupTop()
-
-    def initCup(self):
-        # set to init position
+        self.cup_pos_ctrl.changeDefaultPoseToNext()
         self.cup_pos_ctrl.setPoseDefault()
+        self.moveArmToCupTop()
 
     def initRobotPose(self):
         JOINT_NAMES = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 
@@ -748,7 +744,7 @@ class RobotMoveURRobot:
 
         self.group_man.go(g1, wait=True)
         # self.group_man.go(g, wait=True)
-        self.group_man.go(g2, wait=True)
+        # self.group_man.go(g2, wait=True)
         self.group_man.go(g, wait=True)
 
     def generateReachGoal(self):
@@ -765,9 +761,9 @@ class RobotMoveURRobot:
             delta_x = _radius * cos(theta*pi/180)
             delta_y = _radius * sin(theta*pi/180)
 
-            circle_pose.append(
-                copy.deepcopy(self.generateRobotPose(center_x + delta_x, center_y + delta_y, center_z))
-                )
+            circle_pose.append( copy.deepcopy(self.generateRobotPose(center_x + delta_x, center_y + delta_y, center_z)))
+        circle_pose.append(copy.deepcopy( self.generateRobotPose(center_x, center_y, center_z) ))
+
         return circle_pose
 
     def generateUpDown(self, _center):

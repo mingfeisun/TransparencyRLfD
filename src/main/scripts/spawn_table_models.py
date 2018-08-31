@@ -60,11 +60,14 @@ if __name__ == '__main__':
 
     margin_size = 0.05
 
+    flag_first_cup = False
+
     num_grid, array_map = loadPlacementMap()
     grid_size = (table_size - 2*margin_size)/num_grid
 
     item_name = []
     pos_cup = []
+    list_pos_cup = []
     pos_mat = []
 
     if rospy.has_param('table_params/item_name'):
@@ -82,9 +85,11 @@ if __name__ == '__main__':
             table_config[str(i)][str(j)] = ""
             if array_map[i, j] == 1:
                 table_config[str(i)][str(j)] = "cup"
-                placeObjects(x, y, z, "cup", xml_cup)
-                item_name.append("cup")
-                pos_cup = [i, j]
+                list_pos_cup.append([i, j])
+                if not flag_first_cup:
+                    placeObjects(x, y, z, "cup", xml_cup)
+                    item_name.append("cup")
+                    flag_first_cup = True
             if array_map[i, j] == 2:
                 table_config[str(i)][str(j)] = "mat"
                 placeObjects(x, y, z, "mat", xml_mat)
@@ -98,7 +103,8 @@ if __name__ == '__main__':
     params = {}
     params['item_name'] = item_name
     params['cup_pos'] = pos_cup
-    params['cup_pos_init'] = pos_cup
+    params['cup_pos_init'] = list_pos_cup[0]
+    params['list_cup_pos'] = list_pos_cup
     params['mat_pos'] = pos_mat
     params['grid_size'] = grid_size
     params['margin_size'] = margin_size
