@@ -25,14 +25,14 @@ class TextWindow():
         keycode_ch = self._screen.getch()
         keycode = keycode_ch if keycode_ch != -1 else -1
 
-        keycode_msg = Int16()
-        keycode_msg.data = keycode
+        if keycode != -1:
+            keycode_msg = Int16()
+            keycode_msg.data = keycode
 
-        try:
-            self._pub_cmd.publish(keycode_msg)
-        except rospy.exceptions.ROSException:
-            pass
-
+            try:
+                self._pub_cmd.publish(keycode_msg)
+            except rospy.exceptions.ROSException:
+                pass
         return keycode
 
     def clear(self):

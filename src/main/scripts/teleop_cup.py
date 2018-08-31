@@ -59,7 +59,7 @@ class SimpleKeyTeleop():
         curses.KEY_RIGHT: ( 0,  1),
     }
 
-    def run(self):
+    def init(self):
         rate = rospy.Rate(self._hz)
 
         self.cupCtrl = CupPoseControl()
@@ -73,12 +73,14 @@ class SimpleKeyTeleop():
         rospy.loginfo('Waiting for coming keys')
         self._pub_cmd = rospy.Subscriber('key_input', Int16, self.cb_key_in)
 
+    def run(self):
+        while not rospy.is_shutdown():
+            self._set_x_y()
+            self._send_goal()
+
     def cb_key_in(self, _feedback):
         if self._lock.acquire(False):
             keycode = _feedback.data
-            if keycode is -1:
-                self._set_x_y()
-                self._send_goal()
             self._key_pressed(keycode)
             self._lock.release()
 
@@ -130,7 +132,7 @@ class SimpleKeyTeleop():
 
             if reward == REWARD_GOAL:
                 self.robot_move.initDemo_step1()
-                self.robot_move.autoLearn(_rounds=3)
+                self.robot_move.autoLearn(_rounds=10)
                 self.robot_move.initDemo_step2()
 
     def goalToAction(self, _goal):
@@ -152,7 +154,7 @@ if __name__ == "__main__":
     rospy.init_node('teleop_cup', anonymous=True, disable_signals=True)
     try:
         app = SimpleKeyTeleop()
+        app.init()
         app.run()
-        rospy.spin()
     except rospy.ROSInterruptException:
         pass
