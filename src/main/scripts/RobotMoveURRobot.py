@@ -436,21 +436,20 @@ class RobotMoveURRobot:
             curr_state = result.next_state
             if curr_state in state_stack:
                 break
+            waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
             state_stack.append(curr_state)
             confidence_list.append(result.confidence)
 
-            waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
             result = self.query_action_confidence(curr_state)
             rospy.loginfo('Current uncertainty: %.2f'%result.confidence)
+        
+        rospy.loginfo('%s'%str(state_stack))
+        rospy.loginfo('%s'%str(confidence_list))
 
         if curr_state == goal_state:
             if len(waypoints) > 1:
-                waypoints.pop()
                 idx_max = numpy.argmax(confidence_list)
-                if idx_max == 0: # max is the first
-                    waypoints = [copy.deepcopy(waypoints[0])]
-                else:
-                    waypoints = copy.deepcopy(waypoints[:idx_max])
+                waypoints = copy.deepcopy(waypoints[:idx_max+2])
 
         # waypoints.extend(self.generateCircle(waypoints[-1]))
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
@@ -475,6 +474,8 @@ class RobotMoveURRobot:
             state_stack.append(curr_state)
             result = self.query_action_confidence(curr_state)
             curr_state = result.next_state
+
+        rospy.loginfo('%s'%str(state_stack))
 
         if not curr_state in state_stack:
             waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))

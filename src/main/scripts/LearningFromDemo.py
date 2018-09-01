@@ -63,8 +63,9 @@ class LearningFromDemo:
             for j in range(10):
                 state = str((i, j))
                 pot = self.compute_potential(state, _s_demo)
-                if self.potential[state][_a_demo] > pot:
-                    self.potential[state][_a_demo] = pot
+                self.potential[state][_a_demo] += pot
+                # if self.potential[state][_a_demo] > pot:
+                #     self.potential[state][_a_demo] = pot
 
     def get_next_state(self, _state, _action):
         # four actions: 0(left), 1(up), 2(right), 3(down)
@@ -120,7 +121,7 @@ class LearningFromDemo:
     def update_match_traces(self, s_demo, a_demo):
         a_policy = self.model.get_action_max_more(s_demo)
         if a_policy == a_demo:
-            self.match_traces = self.match_traces_lambda * self.match_traces + 1
+            self.match_traces = self.match_traces_lambda * (self.match_traces + 1)
         else:
             self.match_traces = self.match_traces_lambda * self.match_traces
         rospy.loginfo('Match traces: %f'%self.match_traces)
@@ -200,7 +201,7 @@ class LearningFromDemo:
         state = _req.state
 
         action_list = self.model.get_action_list(state)
-        action = self.model.arg_max(action_list)
+        action = self.model.get_action(state)
 
         confidence = self.calculateConfidence(action_list)
         next_state = self.get_next_state(state, action)

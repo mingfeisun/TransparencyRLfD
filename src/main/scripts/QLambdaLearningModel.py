@@ -12,7 +12,7 @@ class QLambdaLearningModel:
         self.discount_lambda = 0.9
         self.e_lambda = 0.5
         self.epsilon = 0.5
-        self.anneal_decay = 0.0
+        self.anneal_decay = 0.02
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
         self.eligibility_traces = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
@@ -21,6 +21,8 @@ class QLambdaLearningModel:
     # update q function with sample <s, a, r, s'>
     def learn(self, state, action, reward, next_state):
         self.epsilon -= self.anneal_decay
+        if self.epsilon < 0.05:
+            self.epsilon = 0.05
         current_q = self.q_table[state][action]
 
         self.eligibility_traces[state][action] += 1
