@@ -64,6 +64,7 @@ add_service_files(
   QueryActionConfidence.srv
   ResetDemoLearning.srv
   QueryMatchTraces.srv
+  QueryIterations.srv
   QueryAvgConfidence.srv
 )
 

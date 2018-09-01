@@ -30,6 +30,8 @@ class LearningFromDemo:
         rospy.Service('query_match_traces', QueryMatchTraces, self.cb_queryMatchTraces)
         rospy.Service('query_avg_confidence', QueryAvgConfidence, self.cb_queryAvgconfidence)
 
+        rospy.Service('query_iterations', QueryIterations, self.cb_queryIteration)
+
         rospy.Service('reset_demo', ResetDemoLearning, self.cb_reset)
 
         self.pub = rospy.Publisher('current_state', String, queue_size=1, latch=True)
@@ -104,6 +106,9 @@ class LearningFromDemo:
             self.num_itr += 1
 
         return LearningDemoResponse(True)
+
+    def cb_queryIteration(self, _req):
+        return QueryIterationsResponse(self.num_itr)
 
     def update_match_traces(self, s_demo, a_demo):
         a_policy = self.model.get_action_max_more(s_demo)

@@ -68,9 +68,12 @@ class RobotMoveURRobot:
             rospy.wait_for_service('query_action_confidence')
             self.query_action_confidence = rospy.ServiceProxy('query_action_confidence', QueryActionConfidence)
 
+            rospy.wait_for_service('query_iterations')
+            self.query_iterations = rospy.ServiceProxy('query_iterations', QueryIterations)
+
             rospy.wait_for_service('query_match_traces')
             self.query_match_traces = rospy.ServiceProxy('query_match_traces', QueryMatchTraces)
-            self.threshold_m = 1.2
+            self.threshold_m = 2.5
 
             rospy.wait_for_service('query_avg_confidence')
             self.query_avg_confidence = rospy.ServiceProxy('query_avg_confidence', QueryAvgConfidence)
@@ -319,7 +322,7 @@ class RobotMoveURRobot:
 
         for _ in range(_rounds):
             print "Round: %d"%_
-            max_action_num = 500
+            max_action_num = 400
             rospy.set_param('table_params/cup_pos', beg_pos)
             action_num = 0
 
@@ -408,6 +411,8 @@ class RobotMoveURRobot:
 
         dst_pos = rospy.get_param('table_params/mat_pos')
 
+        confidence_list = []
+
         curr_state = _state
         goal_state = str((dst_pos[0], dst_pos[1]))
         waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
@@ -419,21 +424,30 @@ class RobotMoveURRobot:
         curr_state = result.next_state
         waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
         state_stack.append(curr_state)
+        confidence_list.append(result.confidence)
 
-        max_uncertainty = self.query_avg_confidence().confidence
+        avg_uncertainty = self.query_avg_confidence().confidence
 
         result = self.query_action_confidence(curr_state)
-        rospy.loginfo('Max uncertainty: %.2f'%max_uncertainty)
+        rospy.loginfo('Max uncertainty: %.2f'%avg_uncertainty)
         rospy.loginfo('Current uncertainty: %.2f'%result.confidence)
 
-        while result.confidence < max_uncertainty and curr_state != goal_state:
+        while result.confidence < avg_uncertainty and curr_state != goal_state:
             curr_state = result.next_state
             if curr_state in state_stack:
                 break
             state_stack.append(curr_state)
+            confidence_list.append(result.confidence)
+
             waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
             result = self.query_action_confidence(curr_state)
             rospy.loginfo('Current uncertainty: %.2f'%result.confidence)
+
+        if curr_state == goal_state:
+            if len(waypoints) > 1:
+                waypoints.pop()
+                idx_max = numpy.argmax(confidence_list)
+                waypoints = copy.deepcopy(waypoints[:idx_max])
 
         # waypoints.extend(self.generateCircle(waypoints[-1]))
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
@@ -463,8 +477,11 @@ class RobotMoveURRobot:
 
         if not curr_state in state_stack:
             waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+        
+        tmp_up_down = self.generateUpDown(waypoints[-1])
 
-        waypoints.extend(self.generateCircle(waypoints[-1]))
+        waypoints.extend(copy.deepcopy(tmp_up_down))
+        waypoints.extend(copy.deepcopy(tmp_up_down))
 
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
         self.group_man.execute(plan, wait=True)
@@ -472,24 +489,23 @@ class RobotMoveURRobot:
     def showStatusAdaptive(self, _state):
         m_value = self.query_match_traces().match_traces
 
+        num_itr = self.query_iterations().num_itr
+        self.threshold_m -= 0.03 * num_itr
+        if self.threshold_m < 1.0:
+            self.threshold_m = 1.0
+
         if self.SHOW_STATE_MODE == ADAPTIVE:
-            mode_uncertainty = True
-            mode_policy = True
+            if m_value < self.threshold_m:
+                self.showUncertainty(_state)
+            if m_value >= self.threshold_m:
+                self.showPolicy(_state)
 
         if self.SHOW_STATE_MODE == SHOW_UNCERTAINTY:
-            mode_uncertainty = True
-            mode_policy = False
-
-        if self.SHOW_STATE_MODE == SHOW_POLICY:
-            mode_uncertainty = False
-            mode_policy = True
-
-        # rospy.loginfo('Robot move, m_value: %f'%m_value)
-        if m_value < self.threshold_m and mode_uncertainty:
             self.showUncertainty(_state)
 
-        if m_value >= self.threshold_m and mode_policy:
+        if self.SHOW_STATE_MODE == SHOW_POLICY:
             self.showPolicy(_state)
+        # rospy.loginfo('Robot move, m_value: %f'%m_value)
 
     def generateRobotPose(self, _x, _y, _z):
         pose_goal = geometry_msgs.msg.Pose()
