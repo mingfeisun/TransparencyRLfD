@@ -70,7 +70,7 @@ class RobotMoveURRobot:
 
             rospy.wait_for_service('query_match_traces')
             self.query_match_traces = rospy.ServiceProxy('query_match_traces', QueryMatchTraces)
-            self.threshold_m = 2
+            self.threshold_m = 1.2
 
             rospy.wait_for_service('query_avg_confidence')
             self.query_avg_confidence = rospy.ServiceProxy('query_avg_confidence', QueryAvgConfidence)
@@ -744,7 +744,7 @@ class RobotMoveURRobot:
 
         self.group_man.go(g1, wait=True)
         # self.group_man.go(g, wait=True)
-        # self.group_man.go(g2, wait=True)
+        self.group_man.go(g2, wait=True)
         self.group_man.go(g, wait=True)
 
     def generateReachGoal(self):

@@ -98,6 +98,8 @@ class LearningFromDemo:
 
         ## complete one episode
         if r_demo == self.REWARD_GOAL:
+            self.match_traces = 0 # reset match traces
+            self.avg_confidence = 0 # reset confidence
             self.model.complete_one_episode()
             self.num_itr += 1
 

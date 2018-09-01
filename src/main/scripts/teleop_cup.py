@@ -52,10 +52,10 @@ class SimpleKeyTeleop():
         rospy.loginfo('Connect to teleop_cup server: finished')
 
     movement_bindings = {
-        curses.KEY_RIGHT:   (-1,  0),
-        curses.KEY_LEFT:    ( 1,  0),
-        curses.KEY_UP:      ( 0, -1),
-        curses.KEY_DOWN:    ( 0,  1),
+        curses.KEY_UP:   (-1,  0),
+        curses.KEY_DOWN:    ( 1,  0),
+        curses.KEY_LEFT:      ( 0, -1),
+        curses.KEY_RIGHT:    ( 0,  1),
     }
 
     def init(self):
@@ -74,6 +74,7 @@ class SimpleKeyTeleop():
 
     def run(self):
         running_code = 0
+        rospy.set_param('current_status', 'listening')
         while running_code != -1:
             running_code = self._set_x_y()
             if running_code == 1:
@@ -131,7 +132,7 @@ class SimpleKeyTeleop():
     def _start_next_demo(self):
         rospy.set_param("current_status", 'training')
         self.robot_move.initDemo_step1()
-        self.robot_move.autoLearn(_rounds=10)
+        self.robot_move.autoLearn(_rounds=5)
         self.robot_move.initDemo_step2()
         rospy.set_param("current_status", 'listening')
 
