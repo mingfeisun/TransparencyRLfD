@@ -1,5 +1,5 @@
 # Expressive RLfD
-[![Demo](http://img.youtube.com/vi/U4c8gebIX8c/0.jpg)](https://youtu.be/U4c8gebIX8c) 
+[![Demo](http://img.youtube.com/vi/zIvT9LrJffk/0.jpg)](https://youtu.be/zIvT9LrJffk) 
 
 Robot motions in Learning from Demonstration
 
