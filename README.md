@@ -1,4 +1,6 @@
 # Expressive RLfD
+[![Demo](http://img.youtube.com/vi/U4c8gebIX8c/0.jpg)](https://youtu.be/U4c8gebIX8c) 
+
 Robot motions in Learning from Demonstration
 
 * To find out what kind of robot motions will affect future demonstrations
