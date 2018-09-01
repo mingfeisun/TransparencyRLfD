@@ -7,6 +7,10 @@
         </camera>
     </gui>
 
+    <physics type="ode">
+      <real_time_update_rate>3000</real_time_update_rate>
+    </physics>
+
     <model name="cafe_table">
       <static>true</static>
       <link name="link">
