@@ -74,14 +74,21 @@ class LearningFromDemo:
 
         if _action == 0:
             next_state_j -= 1
+            return str((next_state_i, next_state_j))
+
         if _action == 1:
             next_state_i -= 1
+            return str((next_state_i, next_state_j))
+
         if _action == 2:
             next_state_j += 1
+            return str((next_state_i, next_state_j))
+
         if _action == 3:
             next_state_i += 1
+            return str((next_state_i, next_state_j))
 
-        return str((next_state_i, next_state_j))
+        return
 
     def cb_learning(self, _req):
         s_demo = _req.state
@@ -184,7 +191,7 @@ class LearningFromDemo:
         return QueryAvgConfidenceResponse(self.avg_confidence)
 
     def calculateConfidence(self, _action_list):
-        self.invtemp = numpy.log10(self.num_itr)
+        self.invtemp = numpy.log10(self.num_itr) # log decay
         action_array = numpy.array(_action_list)
         temp_prob = numpy.exp(self.invtemp*action_array) / numpy.sum(numpy.exp(self.invtemp*action_array))
         return entropy(temp_prob)

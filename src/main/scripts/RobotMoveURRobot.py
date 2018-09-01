@@ -447,13 +447,14 @@ class RobotMoveURRobot:
             if len(waypoints) > 1:
                 waypoints.pop()
                 idx_max = numpy.argmax(confidence_list)
-                waypoints = copy.deepcopy(waypoints[:idx_max])
+                if idx_max == 0: # max is the first
+                    waypoints = [copy.deepcopy(waypoints[0])]
+                else:
+                    waypoints = copy.deepcopy(waypoints[:idx_max])
 
         # waypoints.extend(self.generateCircle(waypoints[-1]))
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
-
         self.group_man.execute(plan, wait=True)
-
         self.generateLooking()
 
     def showPolicy(self, _state):
@@ -479,7 +480,6 @@ class RobotMoveURRobot:
             waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
         
         tmp_up_down = self.generateUpDown(waypoints[-1])
-
         waypoints.extend(copy.deepcopy(tmp_up_down))
         waypoints.extend(copy.deepcopy(tmp_up_down))
 
