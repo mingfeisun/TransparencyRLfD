@@ -3,7 +3,7 @@
   <world name="demo">
     <gui> 
         <camera name="camera">
-            <pose>1.48572 1.0512 2.16382 0 0.565797 -2.516</pose>
+            <pose>1.44495 0.879935 1.92292 0 0.541797 -2.648</pose>
         </camera>
     </gui>
 
@@ -294,7 +294,27 @@
       <cast_shadows>true</cast_shadows>
     </light>
 
-    <include><uri>model://sun</uri></include>
+    <light name='user_directional_light_0' type='directional'>
+      <pose frame=''>0 0 3 0 0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.1 0.1 -0.9</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>1</cast_shadows>
+    </light>
+
+    <state world_name="demo">
+      <light name='user_directional_light_0'>
+        <pose frame=''>0 0 3 0 0 0</pose>
+      </light>
+    </state>
+
+    <include> <uri>model://sun</uri> </include>
     <!--
     -->
     <include><uri>model://ground_plane</uri></include>
