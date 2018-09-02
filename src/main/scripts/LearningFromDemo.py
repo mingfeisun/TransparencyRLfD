@@ -110,7 +110,13 @@ class LearningFromDemo:
         if r_demo == self.REWARD_GOAL:
             self.match_traces = 0 # reset match traces
             self.avg_confidence = 0 # reset confidence
+
+            self.model.print_eligibility_traces(self.num_itr)
+            self.model.print_Q_table(self.num_itr)
+            self.print_potential()
+
             self.model.complete_one_episode()
+
             self.num_itr += 1
 
         return LearningDemoResponse(True)
@@ -155,7 +161,7 @@ class LearningFromDemo:
         self.pub.publish(msg_state)
 
         self.update_potential(s_demo, a_demo)
-        self.print_potential(s_demo)
+        # self.print_potential(s_demo)
 
 
         na_demo = self.model.get_action_max(ns_demo)
@@ -169,6 +175,11 @@ class LearningFromDemo:
             # rospy.loginfo('Reach goal')
             self.match_traces = 0 # reset match traces
             self.avg_confidence = 0 # reset confidence
+
+            self.model.print_eligibility_traces(self.num_itr)
+            self.model.print_Q_table(self.num_itr)
+            self.print_potential()
+
             self.model.complete_one_episode()
 
             self.num_itr += 1
@@ -201,7 +212,7 @@ class LearningFromDemo:
         state = _req.state
 
         action_list = self.model.get_action_list(state)
-        action = self.model.get_action(state)
+        action = self.model.get_action_max(state)
 
         confidence = self.calculateConfidence(action_list)
         next_state = self.get_next_state(state, action)
@@ -218,8 +229,8 @@ class LearningFromDemo:
         self.model.reset()
         return ResetDemoLearningResponse(True)
 
-    def print_potential(self, _curr_state):
-        with open('log/%s-q_potential_value.txt'%rospy.get_param('username'), 'w') as fout:
+    def print_potential(self):
+        with open('log/%s-q_potential_value-%d.txt'%(rospy.get_param('username'), self.num_itr), 'w') as fout:
             fout.write("State \t Left \t Up \t Right \t Down \n")
             for i in range(10):
                 for j in range(10):
@@ -227,5 +238,3 @@ class LearningFromDemo:
                     fout.write("(%2d, %2d) \t %.2f \t %.2f \t %.2f \t %.2f \n"
                         %(i, j, self.potential[state][0],self.potential[state][1], 
                         self.potential[state][2],self.potential[state][3]))
-                    if state == _curr_state:
-                        fout.write("----------------------------------------\n")

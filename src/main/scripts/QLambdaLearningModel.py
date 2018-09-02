@@ -10,13 +10,12 @@ class QLambdaLearningModel:
         self.actions = actions
         self.learning_alpha = 0.5
         self.discount_lambda = 0.9
-        self.e_lambda = 0.5
+        self.e_lambda = 0.9
         self.epsilon = 0.5
         self.anneal_decay = 0.02
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
         self.eligibility_traces = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
 
-        self.flush_freq = 0
 
     # update q function with sample <s, a, r, s'>
     def learn(self, state, action, reward, next_state):
@@ -28,7 +27,8 @@ class QLambdaLearningModel:
         self.eligibility_traces[state][action] += 1
 
         # using Bellman Optimality Equation to update q function
-        best_action = numpy.argmax(self.q_table[next_state])
+        best_action = numpy.argmax(self.q_table[state])
+
         new_q = reward + self.discount_lambda * max(self.q_table[next_state])
 
         delta = new_q - current_q
@@ -45,9 +45,8 @@ class QLambdaLearningModel:
                         self.eligibility_traces[tmp_state][tmp_action] = 0
                     # rospy.loginfo("eligibility traces for state (%s) and action (%s): %f"%(str(tmp_state), str(tmp_action), self.eligibility_traces[tmp_state][tmp_action]))
 
-        self.flush_freq += 1
-        self.print_Q_table(state, action, reward, next_state)
-        self.print_eligibility_traces(state, action, reward, next_state)
+        # self.print_Q_table()
+        # self.print_eligibility_traces()
 
     def complete_one_episode(self):
         self.reset_eligibility_traces()
@@ -88,32 +87,26 @@ class QLambdaLearningModel:
         return self.q_table[:]
 
     # vis: 0(left), 1(up), 2(right), 3(down)
-    def print_Q_table(self, _curr_state, _action, _reward, _next_state):
-        with open('log/%s-q_table_value-%d.txt'%(rospy.get_param('username'), self.flush_freq), 'w') as fout:
+    def print_Q_table(self, _itr):
+        with open('log/%s-q_table_value-%d.txt'%(rospy.get_param('username'), _itr), 'w') as fout:
             fout.write("State \t Left \t Up \t Right \t Down \n")
             for i in range(10):
                 for j in range(10):
                     state = str((i, j))
-                    fout.write("(%2d, %2d) \t %.2f \t %.2f \t %.2f \t %.2f \n"
+                    fout.write("(%2d, %2d) \t %.6f \t %.6f \t %.6f \t %.6f \n"
                         %(i, j, self.q_table[state][0],self.q_table[state][1], 
                         self.q_table[state][2],self.q_table[state][3]))
-                    if state == _curr_state:
-                        fout.write("reward: %.2f, next state: %s\n"%(_reward, _next_state))
-                        fout.write("----------------------------------------\n")
 
     # vis: 0(left), 1(up), 2(right), 3(down)
-    def print_eligibility_traces(self, _curr_state, _action, _reward, _next_state):
-        with open('log/%s-eligibility_traces-%d.txt'%(rospy.get_param('username'), self.flush_freq), 'w') as fout:
+    def print_eligibility_traces(self, _itr):
+        with open('log/%s-eligibility_traces-%d.txt'%(rospy.get_param('username'), _itr), 'w') as fout:
             fout.write("State \t Left \t Up \t Right \t Down \n")
             for i in range(10):
                 for j in range(10):
                     state = str((i, j))
-                    fout.write("(%2d, %2d) \t %.2f \t %.2f \t %.2f \t %.2f \n"
+                    fout.write("(%2d, %2d) \t %.6f \t %.6f \t %.6f \t %.6f \n"
                         %(i, j, self.eligibility_traces[state][0],self.eligibility_traces[state][1], 
                         self.eligibility_traces[state][2],self.eligibility_traces[state][3]))
-                    if state == _curr_state:
-                        fout.write("reward: %.2f, next state: %s\n"%(_reward, _next_state))
-                        fout.write("----------------------------------------\n")
 
     def reset(self):
         self.q_table = defaultdict(lambda: [0.0, 0.0, 0.0, 0.0])
