@@ -112,6 +112,8 @@ class RobotMoveURRobot:
         self.table_size = rospy.get_param('table_params/table_size')
         self.margin_size = rospy.get_param('table_params/margin_size')
 
+        self.pre_states = []
+
     def initDemo_step1(self):
         self.initRobotPose_tmp()
 
@@ -479,6 +481,9 @@ class RobotMoveURRobot:
 
         if not curr_state in state_stack:
             waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+            state_stack.append(curr_state)
+
+        self.pre_states = copy.deepcopy(state_stack)
         
         tmp_up_down = self.generateUpDown(waypoints[-1])
         waypoints.extend(copy.deepcopy(tmp_up_down))
@@ -491,9 +496,9 @@ class RobotMoveURRobot:
         m_value = self.query_match_traces().match_traces
 
         num_itr = self.query_iterations().num_itr
-        self.threshold_m -= 0.03 * num_itr
-        if self.threshold_m < 1.0:
-            self.threshold_m = 1.0
+        self.threshold_m -= 0.05 * num_itr
+        if self.threshold_m < 0.6:
+            self.threshold_m = 0.6 
 
         if self.SHOW_STATE_MODE == ADAPTIVE:
             if m_value < self.threshold_m:
