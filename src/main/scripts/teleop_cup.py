@@ -83,6 +83,7 @@ class SimpleKeyTeleop():
                 self._lock.release()
             if running_code == 2:
                 self._lock.acquire()
+                self._yes_to_go()
                 self._start_next_demo()
                 self._lock.release()
 
@@ -135,6 +136,25 @@ class SimpleKeyTeleop():
         self.robot_move.autoLearn(_rounds=5)
         self.robot_move.initDemo_step2()
         rospy.set_param("current_status", 'listening')
+
+    def _yes_to_go(self):
+        states_to_go = self.robot_move.pre_states
+        tmp_goal = CupMoveGoal()
+        for i in range(1, len(states_to_go)):
+            tmp_goal.x = eval(states_to_go[i])[0] - eval(states_to_go[i-1])[0] 
+            tmp_goal.y = eval(states_to_go[i])[1] - eval(states_to_go[i-1])[1] 
+            tmp_goal.time_factor = 5
+
+            state = states_to_go[i-1]
+            self.client.send_goal(tmp_goal)
+            self.client.wait_for_result()
+            result = self.client.get_result()
+            reward = result.reward
+            action = self.goalToAction(self.goal)
+            next_state = states_to_go[i]
+
+            self.update_learning(state, action, reward, next_state)
+            rospy.set_param('demo_params/human_goal', [self._x, self._y])
 
     def _send_goal(self):
         self.goal.x = self._x
