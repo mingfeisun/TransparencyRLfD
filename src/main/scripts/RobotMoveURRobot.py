@@ -44,9 +44,14 @@ ADAPTIVE = 3
 SHOW_UNCERTAINTY = 4
 SHOW_POLICY = 5
 
+TRACE_TYPE_CONSERVATIVE =  1
+TRACE_TYPE_BOLD = 2
+TRACE_TYPE_ADAPTIVE = 3
+
 class RobotMoveURRobot:
     def __init__(self):
-        self.SHOW_STATE_MODE = ADAPTIVE
+        self.SHOW_STATE_MODE = rospy.get_param("showing_mode")
+        # self.SHOW_STATE_MODE = ADAPTIVE
 
         self.BASE_SPEED_RATIO = 0.5
 
@@ -448,6 +453,8 @@ class RobotMoveURRobot:
         rospy.loginfo('%s'%str(state_stack))
         rospy.loginfo('%s'%str(confidence_list))
 
+        self.pre_states = copy.deepcopy(state_stack)
+
         if curr_state == goal_state:
             if len(waypoints) > 1:
                 idx_max = numpy.argmax(confidence_list)
@@ -496,21 +503,29 @@ class RobotMoveURRobot:
         m_value = self.query_match_traces().match_traces
 
         num_itr = self.query_iterations().num_itr
-        self.threshold_m -= 0.05 * num_itr
-        if self.threshold_m < 0.6:
-            self.threshold_m = 0.6 
+        if rospy.get_param("match_trace_type") == TRACE_TYPE_CONSERVATIVE:
+            self.threshold_m = 10
+        elif rospy.get_param("match_trace_type") == TRACE_TYPE_BOLD:
+            self.threshold_m = 0.0
+        elif rospy.get_param("match_trace_type") == TRACE_TYPE_ADAPTIVE:
+            self.threshold_m -= 0.05 * num_itr
+            if self.threshold_m < 0.6:
+                self.threshold_m = 0.6 
 
         if self.SHOW_STATE_MODE == ADAPTIVE:
             if m_value < self.threshold_m:
                 self.showUncertainty(_state)
             if m_value >= self.threshold_m:
                 self.showPolicy(_state)
+            return
 
         if self.SHOW_STATE_MODE == SHOW_UNCERTAINTY:
             self.showUncertainty(_state)
+            return 
 
         if self.SHOW_STATE_MODE == SHOW_POLICY:
             self.showPolicy(_state)
+            return 
         # rospy.loginfo('Robot move, m_value: %f'%m_value)
 
     def generateRobotPose(self, _x, _y, _z):

@@ -20,14 +20,18 @@ class TextWindow():
         curses.curs_set(0)
 
         self._num_lines = lines
+        # self.valid_key_codes = [ord('q'), ord('y'), ord('j'), curses.KEY_RIGHT, curses.KEY_LEFT, curses.KEY_DOWN, curses.KEY_UP]
         self.valid_key_codes = [ord('q'), ord('y'), curses.KEY_RIGHT, curses.KEY_LEFT, curses.KEY_DOWN, curses.KEY_UP]
 
     def pub_key(self):
-        keycode_ch = self._screen.getch()
-        if keycode_ch in self.valid_key_codes:
-            keycode = keycode_ch
+        if rospy.get_param('status_completed'):
+            keycode = ord('q')
         else:
-            keycode = -1
+            keycode_ch = self._screen.getch()
+            if keycode_ch in self.valid_key_codes:
+                keycode = keycode_ch
+            else:
+                keycode = -1
 
         if keycode != -1:
             keycode_msg = Int16()
@@ -142,8 +146,9 @@ def main_key_in(stdscr):
             wnd.write_line(2, 'Moving %s' %output_str)
         if rospy.get_param('current_status') == "listening":
             wnd.write_line(5, 'Use arrow keys to move.')
-            wnd.write_line(6, "1) Use 'q' to exit.")
-            wnd.write_line(7, "2) Use 'y' to go to next demonstration.")
+            wnd.write_line(6, "1) 'q': exit.")
+            wnd.write_line(7, "2) 'y': go to next demonstration.")
+            # wnd.write_line(8, "3) 'j': jump to robot status.")
         wnd.refresh()
 
     rospy.loginfo('Done')

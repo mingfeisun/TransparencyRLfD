@@ -86,6 +86,10 @@ class SimpleKeyTeleop():
                 self._yes_to_go()
                 self._start_next_demo()
                 self._lock.release()
+            if running_code == 3:
+                self._lock.acquire()
+                self._yes_to_go()
+                self._lock.release()
 
     def cb_key_in(self, _feedback):
         if self._lock.acquire():
@@ -113,6 +117,9 @@ class SimpleKeyTeleop():
             if key == ord('y'):
                 self._lock.release()
                 return 2 
+            if key == ord('j'):
+                self._lock.release()
+                return 3
             x = 0.0
             y = 0.0
             l, a = self.movement_bindings[key]
@@ -199,7 +206,30 @@ class SimpleKeyTeleop():
         return str(state)
 
 if __name__ == "__main__":
+    
+    NULL = -1
+    GESTURING = 0
+    GESTURING_PAUSING = 1
+    GESTURING_SPEED = 2
+
+    ADAPTIVE = 3
+    SHOW_UNCERTAINTY = 4
+    SHOW_POLICY = 5
+
+    TRACE_TYPE_CONSERVATIVE =  1
+    TRACE_TYPE_BOLD = 2
+    TRACE_TYPE_ADAPTIVE = 3
+
     rospy.init_node('teleop_cup', anonymous=True, disable_signals=True)
+
+    rospy.set_param('status_completed', False)
+    # rospy.set_param('showing_mode', NULL)
+    rospy.set_param('showing_mode', ADAPTIVE)
+
+    # rospy.set_param('match_trace_type', TRACE_TYPE_CONSERVATIVE)
+    rospy.set_param('match_trace_type', TRACE_TYPE_BOLD)
+    # rospy.set_param('match_trace_type', TRACE_TYPE_ADAPTIVE)
+
     try:
         app = SimpleKeyTeleop()
         app.init()

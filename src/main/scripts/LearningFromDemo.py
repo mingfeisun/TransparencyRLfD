@@ -163,7 +163,6 @@ class LearningFromDemo:
         self.update_potential(s_demo, a_demo)
         # self.print_potential(s_demo)
 
-
         na_demo = self.model.get_action_max(ns_demo)
         f_value = self.model.discount_lambda * self.potential[ns_demo][na_demo] - self.potential[s_demo][a_demo]
         new_reward =  r_demo + f_value

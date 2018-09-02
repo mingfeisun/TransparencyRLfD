@@ -17,6 +17,8 @@ class CupPoseControl:
         self.model_state_client = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
         self.idx_current_pos = 0
 
+        self.round = 0
+
     def setPose(self, _pose_cup):
         model_info_cup = ModelState()
         model_info_cup.model_name = 'cup'
@@ -65,8 +67,13 @@ class CupPoseControl:
         num_pos = len(self.list_cup_pos)
         self.idx_current_pos += 1
         if self.idx_current_pos > num_pos - 1:
+            self.round += 1
             self.idx_current_pos = self.idx_current_pos % num_pos
         self.changeDefaultPose(self.list_cup_pos[self.idx_current_pos])
+
+        if self.round == 3:
+            rospy.set_param('status_completed', True)
+
         return num_pos - 1 - self.idx_current_pos
 
     def getPose(self):
