@@ -1,6 +1,0 @@
-string state
-int64 action
-float32 reward
-string next_state
----
-bool update_status

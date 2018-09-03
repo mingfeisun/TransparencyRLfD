@@ -1,2 +1,0 @@
-State 	 Left 	 Up 	 Right 	 Down 
-00 	 0.00 	 0.00 	 -0.80 	 0.00 

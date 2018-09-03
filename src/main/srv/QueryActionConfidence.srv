@@ -1,5 +1,0 @@
-string state
----
-int64 action
-float64 confidence
-string next_state
