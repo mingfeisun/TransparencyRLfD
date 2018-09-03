@@ -23,6 +23,8 @@
   </include> -->
 
   <!-- send robot urdf to param server -->
+  <!--
+  -->
   <include file="$(find ur_gazebo)/launch/ur10.launch">
     <arg name="limited" default="false"  doc="If true, limits joint range [-PI, PI] on all joints." />
     <arg name="paused" default="$(arg paused)" doc="Starts gazebo in paused mode" />
@@ -40,7 +42,6 @@
   -->
 
   <node name="spawn_table_models" pkg="main" type="spawn_table_models.py"/>
-
   <node name="teleop_cup_server" pkg="main" type="teleop_cup_server.py" output="screen"/>
   <node name="teleop_cup_server_fake" pkg="main" type="teleop_cup_server_fake.py" output="screen"/>
 </launch>

@@ -223,8 +223,8 @@ if __name__ == "__main__":
     rospy.init_node('teleop_cup', anonymous=True, disable_signals=True)
 
     rospy.set_param('status_completed', False)
-    # rospy.set_param('showing_mode', NULL)
-    rospy.set_param('showing_mode', ADAPTIVE)
+    rospy.set_param('showing_mode', NULL)
+    # rospy.set_param('showing_mode', ADAPTIVE)
 
     # rospy.set_param('match_trace_type', TRACE_TYPE_CONSERVATIVE)
     rospy.set_param('match_trace_type', TRACE_TYPE_BOLD)

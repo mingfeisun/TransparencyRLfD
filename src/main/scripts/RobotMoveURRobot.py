@@ -500,6 +500,7 @@ class RobotMoveURRobot:
         self.group_man.execute(plan, wait=True)
 
     def showStatusAdaptive(self, _state):
+        self.SHOW_STATE_MODE = rospy.get_param("showing_mode")
         m_value = self.query_match_traces().match_traces
 
         num_itr = self.query_iterations().num_itr
