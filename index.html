@@ -1,1 +1,76 @@
-hello
+<!DOCTYPE html> 
+<html> 
+<head>
+  <title>LfD user study</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="http://vjs.zencdn.net/6.8.0/video-js.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="http://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Expressive robot motions<small> Robot Learning from Demonstration</small></h2>
+    <div style="font-size:16px;" class="well">
+      This is a tutorial for introducing robot motions in ExpressiveRLfD project.
+    </div>
+	  <div id="home" class="tab-pane fade in active">
+	    <h3>Welcome</h3>
+
+	    <p style="font-size:16px;">
+	      Welcome to participate in this experiment. The whole experiment consists of 1+3 sessions and each takes ~3min to finish. The first session an introductory session for you to get familar with the environment. In the following 3 sessions, you need to teach the robot arm how to place the cup the designated area.
+	    </p>
+
+	    <h3>Task domain</h3>
+	    <p style="font-size:16px;">
+	      Now assuming you have a team of four robots for the robot Olympic game (as shown below). In order to get in the competition, you have to teach these robots how to play different sports. Suppose you recruit professional coaches to help teach and train them remotely. Your task is to rate your team members' performances during the learning process, and evaluate whether they are good learners. 
+	    </p>
+	    <div class="row">
+	      <div class="col-md-4">
+		    <img src="..." class="img-fluid" alt="Responsive image">
+	      </div>
+	      <div class="col-md-4">
+		    <img src="..." class="img-fluid" alt="Responsive image">
+	      </div>
+	      <div class="col-md-4">
+		    <img src="..." class="img-fluid" alt="Responsive image">
+	      </div>
+	    </div>
+
+	    <h3>Robot motions</h3>
+	    <div class="row">
+	      <div class="col-md-6">
+		    <div class="well">
+			    <h3 class="text-info text-center">Shaking motion</h3>
+		        <video id="vid_teaching" class="video-js" preload="auto" width="400" height="300" poster="teaching.jpg" data-setup='{"controls": true}'>
+		          <source src="teaching.mp4" type='video/mp4'>
+		        </video>
+	      	</div>
+	      </div>
+
+	      <div class="col-md-6">
+		    <div class="well">
+			    <h3 class="text-danger text-center">Nodding motion</h3>
+		        <video id="vid_learning" class="video-js" preload="auto" width="400" height="300" poster="learning.jpg" data-setup='{"controls": true}'>
+		          <source src="learning.mp4" type='video/mp4'>
+		        </video>
+		    </div>
+	      </div>
+	    </div>
+	  </div>
+  </div>
+  <script src="http://vjs.zencdn.net/6.8.0/video.js"></script>
+</body>
+</html>
