@@ -397,6 +397,7 @@ class RobotMoveURRobot:
         rospy.loginfo('Robot move, confidence: %f'%self.threshold_confidence)
 
         if self.SHOW_STATE_MODE == NULL:
+            self.showFollowup(_state)
             return
         if self.SHOW_STATE_MODE == GESTURING:
             self.gesturing(_state)
@@ -499,6 +500,16 @@ class RobotMoveURRobot:
         (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
         self.group_man.execute(plan, wait=True)
 
+    def showFollowup(self, _state):
+        # 0: left, 1: up, 2: right, 3: down
+        waypoints = []
+
+        curr_state = _state
+        waypoints.append(copy.deepcopy(self.stateToRobotPose(curr_state)))
+
+        (plan, _) = self.group_man.compute_cartesian_path(waypoints, 0.01, 0.0)
+        self.group_man.execute(plan, wait=True)
+
     def showStatusAdaptive(self, _state):
         self.SHOW_STATE_MODE = rospy.get_param("showing_mode")
         m_value = self.query_match_traces().match_traces
@@ -513,6 +524,10 @@ class RobotMoveURRobot:
             if self.threshold_m < 0.6:
                 self.threshold_m = 0.6 
 
+        if self.SHOW_STATE_MODE == NULL:
+            self.showFollowup(_state)
+            return
+
         if self.SHOW_STATE_MODE == ADAPTIVE:
             if m_value < self.threshold_m:
                 self.showUncertainty(_state)
@@ -520,13 +535,13 @@ class RobotMoveURRobot:
                 self.showPolicy(_state)
             return
 
-        if self.SHOW_STATE_MODE == SHOW_UNCERTAINTY:
-            self.showUncertainty(_state)
-            return 
+        # if self.SHOW_STATE_MODE == SHOW_UNCERTAINTY:
+        #     self.showUncertainty(_state)
+        #     return 
 
-        if self.SHOW_STATE_MODE == SHOW_POLICY:
-            self.showPolicy(_state)
-            return 
+        # if self.SHOW_STATE_MODE == SHOW_POLICY:
+        #     self.showPolicy(_state)
+        #     return 
         # rospy.loginfo('Robot move, m_value: %f'%m_value)
 
     def generateRobotPose(self, _x, _y, _z):
