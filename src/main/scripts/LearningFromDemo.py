@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import rospy
 import math
 import numpy
@@ -111,6 +112,8 @@ class LearningFromDemo:
             self.match_traces = 0 # reset match traces
             self.avg_confidence = 0 # reset confidence
 
+            if not os.path.exists('log'):
+                os.mkdir('log')
             self.model.print_eligibility_traces(self.num_itr)
             self.model.print_Q_table(self.num_itr)
             self.print_potential()
@@ -175,6 +178,8 @@ class LearningFromDemo:
             self.match_traces = 0 # reset match traces
             self.avg_confidence = 0 # reset confidence
 
+            if not os.path.exists('log'):
+                os.mkdir('log')
             self.model.print_eligibility_traces(self.num_itr)
             self.model.print_Q_table(self.num_itr)
             self.print_potential()

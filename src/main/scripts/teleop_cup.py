@@ -226,9 +226,9 @@ if __name__ == "__main__":
     # rospy.set_param('showing_mode', NULL)
     rospy.set_param('showing_mode', ADAPTIVE)
 
-    rospy.set_param('match_trace_type', TRACE_TYPE_CONSERVATIVE)
+    # rospy.set_param('match_trace_type', TRACE_TYPE_CONSERVATIVE)
     # rospy.set_param('match_trace_type', TRACE_TYPE_BOLD)
-    # rospy.set_param('match_trace_type', TRACE_TYPE_ADAPTIVE)
+    rospy.set_param('match_trace_type', TRACE_TYPE_ADAPTIVE)
 
     try:
         app = SimpleKeyTeleop()
