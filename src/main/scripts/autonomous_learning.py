@@ -67,7 +67,7 @@ if __name__ == "__main__":
     client_reset(True)
 
     # 0: left, 1: up, 2: right, 3: down
-    iteration_num = 200
+    iteration_num = 54
 
     if rospy.has_param('table_params'):
         beg_pos = rospy.get_param('table_params/cup_pos_init')
@@ -81,15 +81,15 @@ if __name__ == "__main__":
 
     cupPose = CupPoseControl()
 
+    if FAKE_MODE:
+        rospy.set_param('table_params/cup_pos', beg_pos)
+    else:
+        cupPose.setPoseDefault()
+
     for i in range(iteration_num):
         count_actions = 0
         curr_state = str((beg_pos[0], beg_pos[1]))
         goal_state = str((dst_pos[0], dst_pos[1]))
-
-        if FAKE_MODE:
-            rospy.set_param('table_params/cup_pos', beg_pos)
-        else:
-            cupPose.setPoseDefault()
 
         # rospy.loginfo('Start status: %s'%str(curr_state))
         # rospy.loginfo('Goal status: %s'%str(goal_state))
@@ -120,6 +120,8 @@ if __name__ == "__main__":
         iters.append(i)
         counts.append(count_actions)
         rospy.loginfo('Reach goal! Actions taken: %d'%count_actions)
+
+        cupPose.changeDefaultPoseToNext()
 
     rospy.loginfo(counts)
 
