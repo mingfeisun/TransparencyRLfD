@@ -1,3 +1,5 @@
+figures/
+
 *~
 # cmakelist
 src/CMakeLists.txt
