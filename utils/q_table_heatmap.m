@@ -1,39 +1,32 @@
 authors = {'annabelle', 'chen', 'cris', 'dong', ...
-    'feng', 'jerry', 'jiahui', 'jie', ...
-    'joey', 'li', 'peng', 'rex', ...
-    'shen', 'shu', 'wang', 'xiang', ...
-    'xin', 'xue', 'zhou', 'ziming'};
+            'feng', 'jerry', 'jiahui', 'jie', ...
+            'joey', 'li', 'peng', 'rex', ...
+            'shen', 'shu', 'wang', 'xiang', ...
+            'xin', 'xue', 'zhou', 'ziming'};
 
-folder = 'data/path';
+folder = 'data/q_table';
 modes = {'mode1', 'mode2', 'mode3', 'mode4'};
 
 data = zeros(10, 10, 4);
 
 for idx_mode=1:length(modes)
     for idx_author = 1:length(authors)
-        for idx_path = 7:9
-            filename = sprintf('%s/%s-path-%d.txt', modes{idx_mode},...
-                authors{idx_author}, idx_path);
-            filename_path = fullfile(folder, filename);
-            tmp_data = importdata(filename_path);
-            data(:, :, idx_mode) = data(:, :, idx_mode) + (tmp_data > 0);
+        filename = sprintf('%s/%s-q_table_value.txt', modes{idx_mode}, authors{idx_author});
+        filename_path = fullfile(folder, filename);
+        tmp_raw_data = importdata(filename_path);
+        tmp_data = max(tmp_raw_data.data, [], 2);
+        for i =1:10
+            for j =1:10
+                data(i, j, idx_mode) = data(i, j, idx_mode) + tmp_data((i-1)*10 + j);
+            end
         end
     end
+    data(:, :, idx_mode) = data(:, :, idx_mode) / 20.0;
 end
-
-data(2, 9, 1) = 0;
-data(2, 9, 2) = 0;
-data(2, 9, 3) = 0;
-data(2, 9, 4) = 0;
-
-% data(:, :, 1) = data(:, :, 1)/data(2, 9, 1);
-% data(:, :, 2) = data(:, :, 2)/data(2, 9, 2);
-% data(:, :, 3) = data(:, :, 3)/data(2, 9, 3);
-% data(:, :, 4) = data(:, :, 4)/data(2, 9, 4);
 
 for i = 1:4
     title_str = sprintf('Mode %d', i);
-    figure(i);
+    subplot(1, 4, i);
     tmp_data = data(:, :, i);
 
     picture = imread('data/heatmap-table-cropped.png');
@@ -46,8 +39,8 @@ for i = 1:4
 
     for i = 1:10
         for j = 1:10
-            Y(idx_tmp) = (i-0.5)/10.0 * width;
-            X(idx_tmp) = (j-0.5)/10.0 * height;
+            Y(idx_tmp) = (i-0.5)/10.0 * height;
+            X(idx_tmp) = (j-0.5)/10.0 * width;
             val(idx_tmp) = tmp_data(i, j);
             idx_tmp = idx_tmp + 1;
         end
@@ -58,7 +51,7 @@ for i = 1:4
     % F = scatteredInterpolant(Y', X', val','linear');
     for i = 1:height-1
        for j = 1:width-1
-           OverlayImage(i,j) = F(i,j);
+              OverlayImage(i,j) = F(i,j);
        end
     end
     alpha = (~isnan(OverlayImage))*0.5;
@@ -67,8 +60,8 @@ for i = 1:4
     hold on
     OverlayImage = imshow( OverlayImage );
     % Set the color limits to be relative to the data values
-    caxis auto;
-    % caxis([0 1]);  
+    % caxis auto;
+    caxis([-10 25]);  
     colormap( OverlayImage.Parent, jet );
     colorbar( OverlayImage.Parent );
     % Set the AlphaData to be the transparency matrix created earlier
