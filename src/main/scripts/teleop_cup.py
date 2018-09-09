@@ -140,7 +140,7 @@ class SimpleKeyTeleop():
     def _start_next_demo(self):
         rospy.set_param("current_status", 'training')
         self.robot_move.initDemo_step1()
-        self.robot_move.autoLearn(_rounds=5)
+        self.robot_move.autoLearn(_rounds=1)
         self.robot_move.initDemo_step2()
         rospy.set_param("current_status", 'listening')
 

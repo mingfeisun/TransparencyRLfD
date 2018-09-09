@@ -48,6 +48,11 @@ class LearningFromDemo:
         self.num_demo = 0
 
         self.num_itr = 1
+
+        self.num_path = 1
+
+        self.path = []
+
         rospy.loginfo('iterations: %d'%self.num_itr)
 
     def state_distance(self, _s, _s_demo):
@@ -98,6 +103,9 @@ class LearningFromDemo:
         r_demo = _req.reward
         ns_demo = _req.next_state
 
+        self.print_path()
+        self.path = []
+
         # change reward
         na_demo = self.model.get_action_max(ns_demo)
         f_value = self.model.discount_lambda * self.potential[ns_demo][na_demo] - self.potential[s_demo][a_demo]
@@ -114,9 +122,9 @@ class LearningFromDemo:
 
             if not os.path.exists('log'):
                 os.mkdir('log')
-            self.model.print_eligibility_traces(self.num_itr)
-            self.model.print_Q_table(self.num_itr)
-            self.print_potential()
+            # self.model.print_eligibility_traces(self.num_itr)
+            # self.model.print_Q_table(self.num_itr)
+            # self.print_potential()
 
             self.model.complete_one_episode()
 
@@ -160,6 +168,8 @@ class LearningFromDemo:
         self.update_match_traces(s_demo, a_demo)
         self.update_avg_confidence(s_demo, a_demo)
 
+        self.path.append(s_demo)
+
         msg_state = String(ns_demo)
         self.pub.publish(msg_state)
 
@@ -180,9 +190,12 @@ class LearningFromDemo:
 
             if not os.path.exists('log'):
                 os.mkdir('log')
-            self.model.print_eligibility_traces(self.num_itr)
-            self.model.print_Q_table(self.num_itr)
-            self.print_potential()
+            # self.model.print_eligibility_traces(self.num_itr)
+            # self.model.print_Q_table(self.num_itr)
+            # self.print_potential()
+            self.path.append(ns_demo)
+            self.print_path()
+            self.path = []
 
             self.model.complete_one_episode()
 
@@ -232,6 +245,24 @@ class LearningFromDemo:
         self.num_itr = 0
         self.model.reset()
         return ResetDemoLearningResponse(True)
+    
+    def print_path(self):
+        if len(self.path) == 0:
+            return
+        tmp_array = numpy.zeros((10, 10))
+        for i in range(len(self.path)):
+            each_step = self.path[i]
+            idx_i = eval(each_step)[0]
+            idx_j = eval(each_step)[1]
+            tmp_array[idx_i][idx_j] = i
+
+        with open('log/%s-path-%d.txt'%(rospy.get_param('username'), self.num_path), 'w') as fout:
+            for i in range(10):
+                for j in range(10):
+                    fout.write("%2d\t"%tmp_array[i][j])
+                fout.write('\n')
+
+        self.num_path += 1
 
     def print_potential(self):
         with open('log/%s-q_potential_value-%d.txt'%(rospy.get_param('username'), self.num_itr), 'w') as fout:

@@ -3,7 +3,10 @@
   <world name="demo">
     <gui> 
         <camera name="camera">
-            <pose>0.00 0.00 2.6 0 1.57 -3.14</pose>
+            <pose>1.44495 0.879935 1.92292 0 0.541797 -2.648</pose>
+            <!--
+              <pose>0.00 0.00 2.6 0 1.57 -3.14</pose> // top view
+             -->
         </camera>
     </gui>
 

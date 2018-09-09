@@ -397,7 +397,7 @@ class RobotMoveURRobot:
         rospy.loginfo('Robot move, confidence: %f'%self.threshold_confidence)
 
         if self.SHOW_STATE_MODE == NULL:
-            self.showFollowup(_state)
+            # self.showFollowup(_state)
             return
         if self.SHOW_STATE_MODE == GESTURING:
             self.gesturing(_state)
@@ -525,7 +525,7 @@ class RobotMoveURRobot:
                 self.threshold_m = 0.6 
 
         if self.SHOW_STATE_MODE == NULL:
-            self.showFollowup(_state)
+            # self.showFollowup(_state)
             return
 
         if self.SHOW_STATE_MODE == ADAPTIVE:
