@@ -1,3 +1,6 @@
+# Tutorial
+Link can be found [here](http://www.mingfeisun.com/ExpressiveRLfD/)
+
 # Expressive RLfD
 [![Demo](http://img.youtube.com/vi/zIvT9LrJffk/0.jpg)](https://youtu.be/zIvT9LrJffk) 
 
