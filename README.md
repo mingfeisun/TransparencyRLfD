@@ -1,7 +1,7 @@
-# Expressive RLfD
+# Transparent RLfD
 [![Demo](http://img.youtube.com/vi/zIvT9LrJffk/0.jpg)](https://youtu.be/zIvT9LrJffk) 
 
-Robot motions in Learning from Demonstration
+Robot motions in Learning from Demonstration [tutorial](http://www.mingfeisun.com/TransparencyRLfD/)
 
 * To find out what kind of robot motions will affect future demonstrations
 
